@@ -22,8 +22,8 @@ void setup()
 void loop()
 {
   delay(LOOP_DELAY);
-  Serial << "min_pwm_frequency = " << pca9685.getMinPwmFrequency() << "\n";
-  Serial << "max_pwm_frequency = " << pca9685.getMaxPwmFrequency() << "\n";
+  Serial << "min_pwm_frequency = " << pca9685.getPwmFrequencyMin() << "\n";
+  Serial << "max_pwm_frequency = " << pca9685.getPwmFrequencyMax() << "\n";
   // pca9685.setChannelOnAndOffTimes(0,0,2000);
   // delay(LOOP_DELAY);
   // pca9685.setPwmFrequency(1000);

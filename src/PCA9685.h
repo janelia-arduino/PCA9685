@@ -19,15 +19,15 @@ public:
     uint8_t slave_address);
   void setup(uint8_t slave_address=0x40);
 
+  uint16_t getPwmFrequencyMin();
+  uint16_t getPwmFrequencyMax();
+  void setPwmFrequency(uint16_t frequency);
+
   void sleep();
   void wake();
 
-  uint16_t getMinPwmFrequency();
-  uint16_t getMaxPwmFrequency();
-  void setPwmFrequency(uint16_t frequency);
-
-  uint16_t getMinTime();
-  uint16_t getMaxTime();
+  uint16_t getTimeMin();
+  uint16_t getTimeMax();
   void setChannelOnAndOffTimes(uint8_t channel,
     uint16_t on_time,
     uint16_t off_time);
@@ -107,6 +107,9 @@ private:
   // Measured, should be 1E6/24=41666, variation in chips
   const static uint16_t PWM_PERIOD_MAX_US = 39525;
   const static uint32_t MICROSECONDS_PER_SECOND = 1000000;
+
+  const static uint16_t TIME_MIN = 0;
+  const static uint16_t TIME_MAX = 4095;
 
   const static uint8_t TEST_MODE_REGISTER_ADDRESS = 0xFF;
 };

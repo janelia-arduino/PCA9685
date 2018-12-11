@@ -23,6 +23,24 @@ void PCA9685::setup(uint8_t address)
   setup(Wire,address);
 }
 
+uint16_t PCA9685::getPwmFrequencyMin()
+{
+  return MICROSECONDS_PER_SECOND / PWM_PERIOD_MAX_US;
+}
+
+uint16_t PCA9685::getPwmFrequencyMax()
+{
+  return MICROSECONDS_PER_SECOND / PWM_PERIOD_MIN_US;
+}
+
+void PCA9685::setPwmFrequency(uint16_t frequency)
+{
+  uint16_t period_us = MICROSECONDS_PER_SECOND / frequency;
+  period_us = constrain(period_us,PWM_PERIOD_MIN_US,PWM_PERIOD_MAX_US);
+  uint8_t prescale = map(period_us,PWM_PERIOD_MIN_US,PWM_PERIOD_MAX_US,PRE_SCALE_MIN,PRE_SCALE_MAX);
+  setPrescale(prescale);
+}
+
 void PCA9685::sleep()
 {
   Mode1Register mode1_register = readMode1Register();
@@ -44,22 +62,14 @@ void PCA9685::wake()
   }
 }
 
-uint16_t PCA9685::getMinPwmFrequency()
+uint16_t PCA9685::getTimeMin()
 {
-  return MICROSECONDS_PER_SECOND / PWM_PERIOD_MAX_US;
+  return TIME_MIN;
 }
 
-uint16_t PCA9685::getMaxPwmFrequency()
+uint16_t PCA9685::getTimeMax()
 {
-  return MICROSECONDS_PER_SECOND / PWM_PERIOD_MIN_US;
-}
-
-void PCA9685::setPwmFrequency(uint16_t frequency)
-{
-  uint16_t period_us = MICROSECONDS_PER_SECOND / frequency;
-  period_us = constrain(period_us,PWM_PERIOD_MIN_US,PWM_PERIOD_MAX_US);
-  uint8_t prescale = map(period_us,PWM_PERIOD_MIN_US,PWM_PERIOD_MAX_US,PRE_SCALE_MIN,PRE_SCALE_MAX);
-  setPrescale(prescale);
+  return TIME_MAX;
 }
 
 void PCA9685::setChannelOnAndOffTimes(uint8_t channel,
