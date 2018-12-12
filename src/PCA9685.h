@@ -20,8 +20,6 @@ public:
   void setOutputEnablePin(size_t pin);
   void enableOutputs();
   void disableOutputs();
-  void setOutputsInverted();
-  void setOutputsNotInverted();
 
   uint16_t getFrequencyMin();
   uint16_t getFrequencyMax();
@@ -40,6 +38,14 @@ public:
   void setChannelOffTime(uint8_t channel,
     uint16_t off_time);
   void setAllChannelsOffTime(uint16_t off_time);
+
+  void setOutputsInverted();
+  void setOutputsNotInverted();
+  void setOutputsToTotemPole();
+  void setOutputsToOpenDrain();
+  void setOutputsLowWhenDisabled();
+  void setOutputsHighWhenDisabled();
+  void setOutputsHighImpedanceWhenDisabled();
 
 private:
   TwoWire * wire_ptr_;
@@ -79,11 +85,11 @@ private:
   {
     struct
     {
-      uint8_t space : 3;
-      uint8_t invrt : 1;
-      uint8_t och : 1;
-      uint8_t outdrv : 1;
       uint8_t outne : 2;
+      uint8_t outdrv : 1;
+      uint8_t och : 1;
+      uint8_t invrt : 1;
+      uint8_t space : 3;
     } fields;
     uint8_t data;
   };
@@ -123,6 +129,22 @@ private:
   // Datasheet says it should be 24 Hz, 1E6/24=41666
   const static uint16_t PWM_PERIOD_MAX_US = 39525;
   const static uint32_t MICROSECONDS_PER_SECOND = 1000000;
+
+  const static uint8_t OUTPUTS_INVERTED = 1;
+  const static uint8_t OUTPUTS_NOT_INVERTED = 0;
+  const static uint8_t OUTPUTS_TOTEM_POLE = 1;
+  const static uint8_t OUTPUTS_OPEN_DRAIN = 0;
+  const static uint8_t OUTPUTS_LOW_WHEN_DISABLED = 0b00;
+  const static uint8_t OUTPUTS_HIGH_WHEN_DISABLED = 0b01;
+  const static uint8_t OUTPUTS_HIGH_IMPEDANCE_WHEN_DISABLED = 0b10;
+
+  const static uint8_t SLEEP = 1;
+  const static uint8_t WAKE = 0;
+  const static uint8_t AUTO_INCREMENT_ENABLED = 1;
+  const static uint8_t AUTO_INCREMENT_DISABLED = 0;
+  const static uint8_t RESTART_ENABLED = 1;
+  const static uint8_t RESTART_DISABLED = 0;
+  const static uint8_t RESTART_CLEAR = 1;
 
   const static uint16_t TIME_MIN = 0;
   const static uint16_t TIME_MAX = 4095;

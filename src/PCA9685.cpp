@@ -46,20 +46,6 @@ void PCA9685::disableOutputs()
   }
 }
 
-void PCA9685::setOutputsInverted()
-{
-  Mode2Register mode2_register = readMode2Register();
-  mode2_register.fields.invrt = 1;
-  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
-}
-
-void PCA9685::setOutputsNotInverted()
-{
-  Mode2Register mode2_register = readMode2Register();
-  mode2_register.fields.invrt = 0;
-  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
-}
-
 uint16_t PCA9685::getFrequencyMin()
 {
   return MICROSECONDS_PER_SECOND / PWM_PERIOD_MAX_US;
@@ -129,6 +115,55 @@ void PCA9685::setAllChannelsOffTime(uint16_t off_time)
   setOffTime(register_address,off_time);
 }
 
+void PCA9685::setOutputsInverted()
+{
+  Mode2Register mode2_register = readMode2Register();
+  mode2_register.fields.invrt = OUTPUTS_INVERTED;
+  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
+}
+
+void PCA9685::setOutputsNotInverted()
+{
+  Mode2Register mode2_register = readMode2Register();
+  mode2_register.fields.invrt = OUTPUTS_NOT_INVERTED;
+  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
+}
+
+void PCA9685::setOutputsToTotemPole()
+{
+  Mode2Register mode2_register = readMode2Register();
+  mode2_register.fields.outdrv = OUTPUTS_TOTEM_POLE;
+  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
+}
+
+void PCA9685::setOutputsToOpenDrain()
+{
+  Mode2Register mode2_register = readMode2Register();
+  mode2_register.fields.outdrv = OUTPUTS_OPEN_DRAIN;
+  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
+}
+
+void PCA9685::setOutputsLowWhenDisabled()
+{
+  Mode2Register mode2_register = readMode2Register();
+  mode2_register.fields.outne = OUTPUTS_LOW_WHEN_DISABLED;
+  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
+}
+
+void PCA9685::setOutputsHighWhenDisabled()
+{
+  Mode2Register mode2_register = readMode2Register();
+  mode2_register.fields.outne = OUTPUTS_HIGH_WHEN_DISABLED;
+  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
+}
+
+void PCA9685::setOutputsHighImpedanceWhenDisabled()
+{
+  Mode2Register mode2_register = readMode2Register();
+  mode2_register.fields.outne = OUTPUTS_HIGH_IMPEDANCE_WHEN_DISABLED;
+  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
+}
+
 // private
 
 void PCA9685::writeByte(uint8_t register_address,
@@ -188,20 +223,20 @@ void PCA9685::resetAllBusDevices()
 void PCA9685::sleep()
 {
   Mode1Register mode1_register = readMode1Register();
-  mode1_register.fields.sleep = 1;
+  mode1_register.fields.sleep = SLEEP;
   writeByte(MODE1_REGISTER_ADDRESS,mode1_register.data);
 }
 
 void PCA9685::wake()
 {
   Mode1Register mode1_register = readMode1Register();
-  mode1_register.fields.sleep = 0;
-  mode1_register.fields.ai = 1;
+  mode1_register.fields.sleep = WAKE;
+  mode1_register.fields.ai = AUTO_INCREMENT_ENABLED;
   writeByte(MODE1_REGISTER_ADDRESS,mode1_register.data);
   delay(1);
-  if (mode1_register.fields.restart)
+  if (mode1_register.fields.restart == RESTART_ENABLED)
   {
-    mode1_register.fields.restart = 1;
+    mode1_register.fields.restart = RESTART_CLEAR;
     writeByte(MODE1_REGISTER_ADDRESS,mode1_register.data);
   }
 }
