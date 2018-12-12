@@ -13,21 +13,30 @@
 class PCA9685
 {
 public:
-  void setup(TwoWire & wire,
-    uint8_t slave_address);
-  void setup(uint8_t slave_address=0x40);
+  PCA9685();
 
-  void setOutputEnablePin(size_t pin);
-  void enableOutputs();
-  void disableOutputs();
+  void setWire(TwoWire & wire=Wire);
+
+  uint8_t addDevice(uint8_t device_address);
+  void resetAllDevices();
+
+  void setOutputEnablePin(uint8_t device_index,
+    size_t pin);
+  void setAllOutputEnablePins(size_t pin);
+  void enableOutputs(uint8_t device_index);
+  void enableAllOutputs();
+  void disableOutputs(uint8_t device_index);
+  void disableAllOutputs();
 
   uint16_t getFrequencyMin();
   uint16_t getFrequencyMax();
-  void setAllChannelsFrequency(uint16_t frequency);
+  void setFrequency(uint8_t device_index,
+    uint16_t frequency);
+  void setAllFrequencies(uint16_t frequency);
 
   uint16_t getTimeMin();
   uint16_t getTimeMax();
-  void setChannelOnAndOffTimes(uint8_t channel,
+  void setOnAndOffTime(uint8_t channel,
     uint16_t on_time,
     uint16_t off_time);
   void setAllChannelsOnAndOffTimes(uint16_t on_time,
@@ -49,18 +58,27 @@ public:
 
 private:
   TwoWire * wire_ptr_;
-  uint8_t slave_address_;
-  int output_enable_pin_;
-  const static int NO_OUTPUT_ENABLE_PIN = -1;
 
-  const static uint8_t GENERAL_CALL_SLAVE_ADDRESS = 0x00;
+  enum {DEVICE_COUNT_MAX=62};
+  uint8_t device_addresses_[DEVICE_COUNT_MAX];
+  uint8_t device_count_;
+
+  const static uint8_t CHANNELS_PER_DEVICE = 16;
+  uint8_t channel_count_;
+
+  const static int NO_OUTPUT_ENABLE_PIN = -1;
+  int output_enable_pins_[DEVICE_COUNT_MAX];
+
+  const static uint8_t GENERAL_CALL_DEVICE_ADDRESS = 0x00;
   const static uint8_t SWRST = 0b110;
 
   const static uint8_t READ_BYTE_COUNT = 1;
 
-  void writeByte(uint8_t register_address,
+  void writeByte(uint8_t device_address,
+    uint8_t register_address,
     uint8_t data);
-  uint8_t readByte(uint8_t register_address);
+  uint8_t readByte(uint8_t device_address,
+    uint8_t register_address);
 
   const static uint8_t MODE1_REGISTER_ADDRESS = 0x00;
   union Mode1Register
@@ -95,17 +113,21 @@ private:
   };
   Mode2Register readMode2Register();
 
-  void resetAllBusDevices();
   void sleep();
   void wake();
 
+  uint8_t frequencyToPrescale(uint16_t frequency);
   void setPrescale(uint8_t prescale);
-  void setOnAndOffTimes(uint8_t register_address,
+  uint8_t channelToDeviceIndex(uint8_t channel);
+  void setOnAndOffTimeByRegister(uint8_t device_address,
+    uint8_t register_address,
     uint16_t on_time,
     uint16_t off_time);
-  void setOnTime(uint8_t register_address,
+  void setOnTimeByRegister(uint8_t device_address,
+    uint8_t register_address,
     uint16_t on_time);
-  void setOffTime(uint8_t register_address,
+  void setOffTimeByRegister(uint8_t device_address,
+    uint8_t register_address,
     uint16_t off_time);
 
   const static uint8_t SUBADR1_REGISTER_ADDRESS = 0x02;
