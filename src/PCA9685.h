@@ -17,6 +17,12 @@ public:
     uint8_t slave_address);
   void setup(uint8_t slave_address=0x40);
 
+  void setOutputEnablePin(size_t pin);
+  void enableOutputs();
+  void disableOutputs();
+  void setOutputsInverted();
+  void setOutputsNotInverted();
+
   uint16_t getFrequencyMin();
   uint16_t getFrequencyMax();
   void setAllChannelsFrequency(uint16_t frequency);
@@ -35,12 +41,11 @@ public:
     uint16_t off_time);
   void setAllChannelsOffTime(uint16_t off_time);
 
-  void sleep();
-  void wake();
-
 private:
   TwoWire * wire_ptr_;
   uint8_t slave_address_;
+  int output_enable_pin_;
+  const static int NO_OUTPUT_ENABLE_PIN = -1;
 
   const static uint8_t GENERAL_CALL_SLAVE_ADDRESS = 0x00;
   const static uint8_t SWRST = 0b110;
@@ -85,6 +90,9 @@ private:
   Mode2Register readMode2Register();
 
   void resetAllBusDevices();
+  void sleep();
+  void wake();
+
   void setPrescale(uint8_t prescale);
   void setOnAndOffTimes(uint8_t register_address,
     uint16_t on_time,
@@ -118,8 +126,6 @@ private:
 
   const static uint16_t TIME_MIN = 0;
   const static uint16_t TIME_MAX = 4095;
-
-  const static uint8_t TEST_MODE_REGISTER_ADDRESS = 0xFF;
 };
 
 #endif

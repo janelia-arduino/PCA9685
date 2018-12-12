@@ -12,15 +12,52 @@ void PCA9685::setup(TwoWire & wire,
 {
   wire_ptr_ = &wire;
   slave_address_ = slave_address;
+  output_enable_pin_ = NO_OUTPUT_ENABLE_PIN;
 
   wire_ptr_->begin();
   resetAllBusDevices();
-  wake();
 }
 
 void PCA9685::setup(uint8_t address)
 {
   setup(Wire,address);
+}
+
+void PCA9685::setOutputEnablePin(size_t pin)
+{
+  pinMode(pin,OUTPUT);
+  output_enable_pin_ = pin;
+  disableOutputs();
+}
+
+void PCA9685::enableOutputs()
+{
+  if (output_enable_pin_ != NO_OUTPUT_ENABLE_PIN)
+  {
+    digitalWrite(output_enable_pin_,LOW);
+  }
+}
+
+void PCA9685::disableOutputs()
+{
+  if (output_enable_pin_ != NO_OUTPUT_ENABLE_PIN)
+  {
+    digitalWrite(output_enable_pin_,HIGH);
+  }
+}
+
+void PCA9685::setOutputsInverted()
+{
+  Mode2Register mode2_register = readMode2Register();
+  mode2_register.fields.invrt = 1;
+  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
+}
+
+void PCA9685::setOutputsNotInverted()
+{
+  Mode2Register mode2_register = readMode2Register();
+  mode2_register.fields.invrt = 0;
+  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
 }
 
 uint16_t PCA9685::getFrequencyMin()
@@ -92,27 +129,6 @@ void PCA9685::setAllChannelsOffTime(uint16_t off_time)
   setOffTime(register_address,off_time);
 }
 
-void PCA9685::sleep()
-{
-  Mode1Register mode1_register = readMode1Register();
-  mode1_register.fields.sleep = 1;
-  writeByte(MODE1_REGISTER_ADDRESS,mode1_register.data);
-}
-
-void PCA9685::wake()
-{
-  Mode1Register mode1_register = readMode1Register();
-  mode1_register.fields.sleep = 0;
-  mode1_register.fields.ai = 1;
-  writeByte(MODE1_REGISTER_ADDRESS,mode1_register.data);
-  delay(1);
-  if (mode1_register.fields.restart)
-  {
-    mode1_register.fields.restart = 1;
-    writeByte(MODE1_REGISTER_ADDRESS,mode1_register.data);
-  }
-}
-
 // private
 
 void PCA9685::writeByte(uint8_t register_address,
@@ -166,6 +182,28 @@ void PCA9685::resetAllBusDevices()
   wire_ptr_->write(SWRST);
   wire_ptr_->endTransmission();
   delay(10);
+  wake();
+}
+
+void PCA9685::sleep()
+{
+  Mode1Register mode1_register = readMode1Register();
+  mode1_register.fields.sleep = 1;
+  writeByte(MODE1_REGISTER_ADDRESS,mode1_register.data);
+}
+
+void PCA9685::wake()
+{
+  Mode1Register mode1_register = readMode1Register();
+  mode1_register.fields.sleep = 0;
+  mode1_register.fields.ai = 1;
+  writeByte(MODE1_REGISTER_ADDRESS,mode1_register.data);
+  delay(1);
+  if (mode1_register.fields.restart)
+  {
+    mode1_register.fields.restart = 1;
+    writeByte(MODE1_REGISTER_ADDRESS,mode1_register.data);
+  }
 }
 
 void PCA9685::setPrescale(uint8_t prescale)
