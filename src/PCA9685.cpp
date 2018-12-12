@@ -23,22 +23,73 @@ void PCA9685::setup(uint8_t address)
   setup(Wire,address);
 }
 
-uint16_t PCA9685::getPwmFrequencyMin()
+uint16_t PCA9685::getFrequencyMin()
 {
   return MICROSECONDS_PER_SECOND / PWM_PERIOD_MAX_US;
 }
 
-uint16_t PCA9685::getPwmFrequencyMax()
+uint16_t PCA9685::getFrequencyMax()
 {
   return MICROSECONDS_PER_SECOND / PWM_PERIOD_MIN_US;
 }
 
-void PCA9685::setPwmFrequency(uint16_t frequency)
+void PCA9685::setAllChannelsFrequency(uint16_t frequency)
 {
   uint16_t period_us = MICROSECONDS_PER_SECOND / frequency;
   period_us = constrain(period_us,PWM_PERIOD_MIN_US,PWM_PERIOD_MAX_US);
   uint8_t prescale = map(period_us,PWM_PERIOD_MIN_US,PWM_PERIOD_MAX_US,PRE_SCALE_MIN,PRE_SCALE_MAX);
   setPrescale(prescale);
+}
+
+uint16_t PCA9685::getTimeMin()
+{
+  return TIME_MIN;
+}
+
+uint16_t PCA9685::getTimeMax()
+{
+  return TIME_MAX;
+}
+
+void PCA9685::setChannelOnAndOffTimes(uint8_t channel,
+  uint16_t on_time,
+  uint16_t off_time)
+{
+  uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * channel;
+  setOnAndOffTimes(register_address,on_time,off_time);
+}
+
+void PCA9685::setAllChannelsOnAndOffTimes(uint16_t on_time,
+  uint16_t off_time)
+{
+  uint8_t register_address = ALL_LED_ON_L_REGISTER_ADDRESS;
+  setOnAndOffTimes(register_address,on_time,off_time);
+}
+
+void PCA9685::setChannelOnTime(uint8_t channel,
+  uint16_t on_time)
+{
+  uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * channel;
+  setOnTime(register_address,on_time);
+}
+
+void PCA9685::setAllChannelsOnTime(uint16_t on_time)
+{
+  uint8_t register_address = ALL_LED_ON_L_REGISTER_ADDRESS;
+  setOnTime(register_address,on_time);
+}
+
+void PCA9685::setChannelOffTime(uint8_t channel,
+  uint16_t off_time)
+{
+  uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * channel + LED_REGISTERS_SIZE / 2;
+  setOffTime(register_address,off_time);
+}
+
+void PCA9685::setAllChannelsOffTime(uint16_t off_time)
+{
+  uint8_t register_address = ALL_LED_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE / 2;
+  setOffTime(register_address,off_time);
 }
 
 void PCA9685::sleep()
@@ -60,49 +111,6 @@ void PCA9685::wake()
     mode1_register.fields.restart = 1;
     writeByte(MODE1_REGISTER_ADDRESS,mode1_register.data);
   }
-}
-
-uint16_t PCA9685::getTimeMin()
-{
-  return TIME_MIN;
-}
-
-uint16_t PCA9685::getTimeMax()
-{
-  return TIME_MAX;
-}
-
-void PCA9685::setChannelOnAndOffTimes(uint8_t channel,
-  uint16_t on_time,
-  uint16_t off_time)
-{
-  wire_ptr_->beginTransmission(slave_address_);
-  wire_ptr_->write(LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * channel);
-  wire_ptr_->write(on_time);
-  wire_ptr_->write(on_time >> BITS_PER_BYTE);
-  wire_ptr_->write(off_time);
-  wire_ptr_->write(off_time >> BITS_PER_BYTE);
-  wire_ptr_->endTransmission();
-}
-
-void PCA9685::setChannelOnTime(uint8_t channel,
-  uint16_t on_time)
-{
-  wire_ptr_->beginTransmission(slave_address_);
-  wire_ptr_->write(LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * channel);
-  wire_ptr_->write(on_time);
-  wire_ptr_->write(on_time >> BITS_PER_BYTE);
-  wire_ptr_->endTransmission();
-}
-
-void PCA9685::setChannelOffTime(uint8_t channel,
-  uint16_t off_time)
-{
-  wire_ptr_->beginTransmission(slave_address_);
-  wire_ptr_->write(LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * channel + LED_REGISTERS_SIZE / 2);
-  wire_ptr_->write(off_time);
-  wire_ptr_->write(off_time >> BITS_PER_BYTE);
-  wire_ptr_->endTransmission();
 }
 
 // private
@@ -165,4 +173,37 @@ void PCA9685::setPrescale(uint8_t prescale)
   sleep();
   writeByte(PRE_SCALE_REGISTER_ADDRESS,prescale);
   wake();
+}
+
+void PCA9685::setOnAndOffTimes(uint8_t register_address,
+  uint16_t on_time,
+  uint16_t off_time)
+{
+  wire_ptr_->beginTransmission(slave_address_);
+  wire_ptr_->write(register_address);
+  wire_ptr_->write(on_time);
+  wire_ptr_->write(on_time >> BITS_PER_BYTE);
+  wire_ptr_->write(off_time);
+  wire_ptr_->write(off_time >> BITS_PER_BYTE);
+  wire_ptr_->endTransmission();
+}
+
+void PCA9685::setOnTime(uint8_t register_address,
+  uint16_t on_time)
+{
+  wire_ptr_->beginTransmission(slave_address_);
+  wire_ptr_->write(register_address);
+  wire_ptr_->write(on_time);
+  wire_ptr_->write(on_time >> BITS_PER_BYTE);
+  wire_ptr_->endTransmission();
+}
+
+void PCA9685::setOffTime(uint8_t register_address,
+  uint16_t off_time)
+{
+  wire_ptr_->beginTransmission(slave_address_);
+  wire_ptr_->write(register_address);
+  wire_ptr_->write(off_time);
+  wire_ptr_->write(off_time >> BITS_PER_BYTE);
+  wire_ptr_->endTransmission();
 }

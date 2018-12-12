@@ -9,8 +9,6 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-#include <Streaming.h>
-
 
 class PCA9685
 {
@@ -19,22 +17,26 @@ public:
     uint8_t slave_address);
   void setup(uint8_t slave_address=0x40);
 
-  uint16_t getPwmFrequencyMin();
-  uint16_t getPwmFrequencyMax();
-  void setPwmFrequency(uint16_t frequency);
-
-  void sleep();
-  void wake();
+  uint16_t getFrequencyMin();
+  uint16_t getFrequencyMax();
+  void setAllChannelsFrequency(uint16_t frequency);
 
   uint16_t getTimeMin();
   uint16_t getTimeMax();
   void setChannelOnAndOffTimes(uint8_t channel,
     uint16_t on_time,
     uint16_t off_time);
+  void setAllChannelsOnAndOffTimes(uint16_t on_time,
+    uint16_t off_time);
   void setChannelOnTime(uint8_t channel,
     uint16_t on_time);
+  void setAllChannelsOnTime(uint16_t on_time);
   void setChannelOffTime(uint8_t channel,
     uint16_t off_time);
+  void setAllChannelsOffTime(uint16_t off_time);
+
+  void sleep();
+  void wake();
 
 private:
   TwoWire * wire_ptr_;
@@ -84,6 +86,13 @@ private:
 
   void resetAllBusDevices();
   void setPrescale(uint8_t prescale);
+  void setOnAndOffTimes(uint8_t register_address,
+    uint16_t on_time,
+    uint16_t off_time);
+  void setOnTime(uint8_t register_address,
+    uint16_t on_time);
+  void setOffTime(uint8_t register_address,
+    uint16_t off_time);
 
   const static uint8_t SUBADR1_REGISTER_ADDRESS = 0x02;
   const static uint8_t SUBADR2_REGISTER_ADDRESS = 0x03;
@@ -91,20 +100,19 @@ private:
   const static uint8_t ALLCALLADR_REGISTER_ADDRESS = 0x05;
 
   const static uint8_t LED0_ON_L_REGISTER_ADDRESS = 0x06;
+  const static uint8_t ALL_LED_ON_L_REGISTER_ADDRESS = 0xFA;
   const static uint8_t LED_REGISTERS_SIZE = 4;
   const static uint8_t BITS_PER_BYTE = 8;
-
-  const static uint8_t ALL_LED_ON_L_REGISTER_ADDRESS = 0xFA;
-  const static uint8_t ALL_LED_ON_H_REGISTER_ADDRESS = 0xFB;
-  const static uint8_t ALL_LED_OFF_L_REGISTER_ADDRESS = 0xFC;
-  const static uint8_t ALL_LED_OFF_H_REGISTER_ADDRESS = 0xFD;
 
   const static uint8_t PRE_SCALE_REGISTER_ADDRESS = 0xFE;
   const static uint8_t PRE_SCALE_MIN = 0x03;
   const static uint8_t PRE_SCALE_MAX = 0xFF;
-  // Measured, should be 1E6/1526=655, variation in chips
+  // Use period instead of frequency to calculate prescale since it is linear
+  // Measured 1620 Hz at prescale value 0x03, 1E6/1620=617
+  // Datasheet says it should be 1526 Hz, 1E6/1526=655
   const static uint16_t PWM_PERIOD_MIN_US = 617;
-  // Measured, should be 1E6/24=41666, variation in chips
+  // Measured 25.3 Hz at prescale value 0xFF, 1E6/25.3=39525
+  // Datasheet says it should be 24 Hz, 1E6/24=41666
   const static uint16_t PWM_PERIOD_MAX_US = 39525;
   const static uint32_t MICROSECONDS_PER_SECOND = 1000000;
 
