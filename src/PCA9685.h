@@ -9,7 +9,6 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-
 class PCA9685
 {
 public:
@@ -17,67 +16,110 @@ public:
 
   void setWire(TwoWire & wire=Wire);
 
-  uint8_t addDevice(uint8_t device_address);
+  // device_address=0x40
+  // when all device address hardware select lines are low
+  // cannot use reserved addresses
+  void addDevice(uint8_t device_address);
   void resetAllDevices();
 
-  void setOutputEnablePin(uint8_t device_index,
-    size_t pin);
-  void setAllOutputEnablePins(size_t pin);
-  void enableOutputs(uint8_t device_index);
-  void enableAllOutputs();
-  void disableOutputs(uint8_t device_index);
-  void disableAllOutputs();
+  void setupOutputEnablePin(size_t output_enable_pin);
+  void enableOutputs(size_t output_enable_pin);
+  void disableOutputs(size_t output_enable_pin);
+
+  const static uint8_t DEVICE_ADDRESS_ALL = 0x70;
+  const static uint8_t DEVICE_ADDRESS_GROUP0 = 0x71;
+  const static uint8_t DEVICE_ADDRESS_GROUP1 = 0x72;
+  const static uint8_t DEVICE_ADDRESS_GROUP2 = 0x73;
+  void addDeviceToGroup0(uint8_t device_address);
+  void removeDeviceFromGroup0(uint8_t device_address);
+  void addDeviceToGroup1(uint8_t device_address);
+  void removeDeviceFromGroup1(uint8_t device_address);
+  void addDeviceToGroup2(uint8_t device_address);
+  void removeDeviceFromGroup2(uint8_t device_address);
 
   uint16_t getFrequencyMin();
   uint16_t getFrequencyMax();
-  void setFrequency(uint8_t device_index,
+  void setOneDeviceToFrequency(uint8_t device_address,
     uint16_t frequency);
-  void setAllFrequencies(uint16_t frequency);
+  void setAllDevicesToFrequency(uint16_t frequency);
+
+  uint8_t getChannelCount();
+  uint8_t getDeviceChannelCount();
 
   uint16_t getTimeMin();
   uint16_t getTimeMax();
-  void setOnAndOffTime(uint8_t channel,
+  void setChannelOnAndOffTime(uint8_t channel,
     uint16_t on_time,
     uint16_t off_time);
-  void setAllChannelsOnAndOffTimes(uint16_t on_time,
+  void setDeviceChannelOnAndOffTime(uint8_t device_address,
+    uint8_t device_channel,
+    uint16_t on_time,
+    uint16_t off_time);
+  void setAllDeviceChannelsOnAndOffTime(uint8_t device_address,
+    uint16_t on_time,
     uint16_t off_time);
   void setChannelOnTime(uint8_t channel,
     uint16_t on_time);
-  void setAllChannelsOnTime(uint16_t on_time);
+  void setDeviceChannelOnTime(uint8_t device_address,
+    uint8_t device_channel,
+    uint16_t on_time);
+  void setAllDeviceChannelsOnTime(uint8_t device_address,
+    uint16_t on_time);
   void setChannelOffTime(uint8_t channel,
     uint16_t off_time);
-  void setAllChannelsOffTime(uint16_t off_time);
+  void setDeviceChannelOffTime(uint8_t device_address,
+    uint8_t device_channel,
+    uint16_t off_time);
+  void setAllDeviceChannelsOffTime(uint8_t device_address,
+    uint16_t off_time);
 
-  void setOutputsInverted();
-  void setOutputsNotInverted();
-  void setOutputsToTotemPole();
-  void setOutputsToOpenDrain();
-  void setOutputsLowWhenDisabled();
-  void setOutputsHighWhenDisabled();
-  void setOutputsHighImpedanceWhenDisabled();
+  void setOneDeviceOutputsInverted(uint8_t device_address);
+  void setAllDevicesOutputsInverted();
+  void setOneDeviceOutputsNotInverted(uint8_t device_address);
+  void setAllDevicesOutputsNotInverted();
+  void setOneDeviceOutputsToTotemPole(uint8_t device_address);
+  void setAllDevicesOutputsToTotemPole();
+  void setOneDeviceOutputsToOpenDrain(uint8_t device_address);
+  void setAllDevicesOutputsToOpenDrain();
+  void setOneDeviceOutputsLowWhenDisabled(uint8_t device_address);
+  void setAllDevicesOutputsLowWhenDisabled();
+  void setOneDeviceOutputsHighWhenDisabled(uint8_t device_address);
+  void setAllDevicesOutputsHighWhenDisabled();
+  void setOneDeviceOutputsHighImpedanceWhenDisabled(uint8_t device_address);
+  void setAllDevicesOutputsHighImpedanceWhenDisabled();
 
 private:
+  const static uint8_t DEVICE_ADDRESS_MIN = 0x40;
+  const static uint8_t DEVICE_ADDRESS_MAX = 0x7B;
+  enum {DEVICE_COUNT_MAX=55};
+  uint8_t device_count_;
+  uint8_t device_addresses_[DEVICE_COUNT_MAX];
+
   TwoWire * wire_ptr_;
 
-  enum {DEVICE_COUNT_MAX=62};
-  uint8_t device_addresses_[DEVICE_COUNT_MAX];
-  uint8_t device_count_;
-
-  const static uint8_t CHANNELS_PER_DEVICE = 16;
-  uint8_t channel_count_;
-
   const static int NO_OUTPUT_ENABLE_PIN = -1;
-  int output_enable_pins_[DEVICE_COUNT_MAX];
+  const static uint8_t CHANNELS_PER_DEVICE = 16;
+
+  const static uint8_t DEVICE_INDEX_NONE = -1;
+  const static uint8_t DEVICE_INDEX_ALL = -2;
+  const static uint8_t DEVICE_INDEX_GROUP0 = -3;
+  const static uint8_t DEVICE_INDEX_GROUP1 = -4;
+  const static uint8_t DEVICE_INDEX_GROUP2 = -5;
+  int deviceAddressToDeviceIndex(uint8_t device_address);
 
   const static uint8_t GENERAL_CALL_DEVICE_ADDRESS = 0x00;
   const static uint8_t SWRST = 0b110;
 
   const static uint8_t READ_BYTE_COUNT = 1;
 
-  void writeByte(uint8_t device_address,
+  // Can write to one or more device at a time
+  // so use address rather than index
+  void write(uint8_t device_address,
     uint8_t register_address,
     uint8_t data);
-  uint8_t readByte(uint8_t device_address,
+  // Can only read from one device at a time
+  // so use index rather than address
+  uint8_t read(uint8_t device_index,
     uint8_t register_address);
 
   const static uint8_t MODE1_REGISTER_ADDRESS = 0x00;
@@ -96,7 +138,7 @@ private:
     } fields;
     uint8_t data;
   };
-  Mode1Register readMode1Register();
+  Mode1Register readMode1Register(uint8_t device_index);
 
   const static uint8_t MODE2_REGISTER_ADDRESS = 0x01;
   union Mode2Register
@@ -111,14 +153,19 @@ private:
     } fields;
     uint8_t data;
   };
-  Mode2Register readMode2Register();
+  Mode2Register readMode2Register(uint8_t device_index);
 
-  void sleep();
-  void wake();
+  void sleep(uint8_t device_index);
+  void wake(uint8_t device_index);
+  void wakeAll();
 
   uint8_t frequencyToPrescale(uint16_t frequency);
-  void setPrescale(uint8_t prescale);
+  void setPrescale(uint8_t device_index,
+    uint8_t prescale);
+
   uint8_t channelToDeviceIndex(uint8_t channel);
+  uint8_t channelToDeviceChannel(uint8_t channel);
+
   void setOnAndOffTimeByRegister(uint8_t device_address,
     uint8_t register_address,
     uint16_t on_time,
@@ -130,13 +177,25 @@ private:
     uint8_t register_address,
     uint16_t off_time);
 
+  void setOutputsInverted(uint8_t device_index);
+  void setOutputsNotInverted(uint8_t device_index);
+  void setOutputsToTotemPole(uint8_t device_index);
+  void setOutputsToOpenDrain(uint8_t device_index);
+  void setOutputsLowWhenDisabled(uint8_t device_index);
+  void setOutputsHighWhenDisabled(uint8_t device_index);
+  void setOutputsHighImpedanceWhenDisabled(uint8_t device_index);
+
+  const static uint8_t DOES_NOT_RESPOND = 0;
+  const static uint8_t DOES_RESPOND = 1;
   const static uint8_t SUBADR1_REGISTER_ADDRESS = 0x02;
   const static uint8_t SUBADR2_REGISTER_ADDRESS = 0x03;
   const static uint8_t SUBADR3_REGISTER_ADDRESS = 0x04;
   const static uint8_t ALLCALLADR_REGISTER_ADDRESS = 0x05;
 
   const static uint8_t LED0_ON_L_REGISTER_ADDRESS = 0x06;
+  const static uint8_t LED0_OFF_L_REGISTER_ADDRESS = 0x08;
   const static uint8_t ALL_LED_ON_L_REGISTER_ADDRESS = 0xFA;
+  const static uint8_t ALL_LED_OFF_L_REGISTER_ADDRESS = 0xFC;
   const static uint8_t LED_REGISTERS_SIZE = 4;
   const static uint8_t BITS_PER_BYTE = 8;
 

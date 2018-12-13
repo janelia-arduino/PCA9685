@@ -10,10 +10,9 @@
 PCA9685::PCA9685()
 {
   device_count_ = 0;
-  channel_count_ = 0;
   for (uint8_t device_index=0; device_index<DEVICE_COUNT_MAX; ++device_index)
   {
-    output_enable_pins_[DEVICE_INDEX] = NO_OUTPUT_ENABLE_PIN;
+    device_addresses_[device_index] = GENERAL_CALL_DEVICE_ADDRESS;
   }
 }
 
@@ -23,13 +22,18 @@ void PCA9685::setWire(TwoWire & wire)
   wire_ptr_->begin();
 }
 
-uint8_t PCA9685::addDevice(uint8_t device_address)
+void PCA9685::addDevice(uint8_t device_address)
 {
-  uint8_t device_index = device_count_;
-  device_address_[device_index] = device_address;
-  ++device_count_;
-  channel_count_ += CHANNELS_PER_DEVICE;
-  return device_index;
+  if ((device_address < DEVICE_ADDRESS_MIN) ||
+    (device_address > DEVICE_ADDRESS_MAX) ||
+    (device_address == DEVICE_ADDRESS_ALL) ||
+    (device_address == DEVICE_ADDRESS_GROUP0) ||
+    (device_address == DEVICE_ADDRESS_GROUP1) ||
+    (device_address == DEVICE_ADDRESS_GROUP2))
+  {
+    return;
+  }
+  device_addresses_[device_count_++] = device_address;
 }
 
 void PCA9685::resetAllDevices()
@@ -41,63 +45,92 @@ void PCA9685::resetAllDevices()
   wakeAll();
 }
 
-void PCA9685::setOutputEnablePin(uint8_t device_index,
-  size_t pin)
+void PCA9685::setupOutputEnablePin(size_t output_enable_pin)
 {
-  if (device_index < device_count_)
-  {
-    pinMode(pin,OUTPUT);
-    output_enable_pins_[device_index] = pin;
-    disableOutputs(device_index);
-  }
+  pinMode(output_enable_pin,OUTPUT);
+  digitalWrite(output_enable_pin,HIGH);
 }
 
-void PCA9685::setAllOutputEnablePins(size_t pin)
+void PCA9685::enableOutputs(size_t output_enable_pin)
 {
-  pinMode(pin,OUTPUT);
-  for (uint8_t device_index=0; device_index<DEVICE_COUNT_MAX; ++device_index)
-  {
-    output_enable_pins_[device_index] = pin;
-    disableOutputs(device_index);
-  }
+  digitalWrite(output_enable_pin,LOW);
 }
 
-void PCA9685::enableOutputs(uint8_t device_index)
+void PCA9685::disableOutputs(size_t output_enable_pin)
 {
-  if (device_index < device_count_)
-  {
-    if (output_enable_pins_[device_index] != NO_OUTPUT_ENABLE_PIN)
-    {
-      digitalWrite(output_enable_pin_,LOW);
-    }
-  }
+  digitalWrite(output_enable_pin,HIGH);
 }
 
-void PCA9685::enableAllOutputs()
+void PCA9685::addDeviceToGroup0(uint8_t device_address)
 {
-  for (uint8_t device_index=0; device_index<DEVICE_COUNT_MAX; ++device_index)
+  int device_index = deviceAddressToDeviceIndex(device_address);
+  if (device_index < 0)
   {
-    enableOutputs(device_index);
+    return;
   }
+  Mode1Register mode1_register = readMode1Register(device_index);
+  mode1_register.fields.sub1 = DOES_RESPOND;
+  write(device_address,MODE1_REGISTER_ADDRESS,mode1_register.data);
 }
 
-void PCA9685::disableOutputs(uint8_t device_index)
+void PCA9685::removeDeviceFromGroup0(uint8_t device_address)
 {
-  if (device_index < device_count_)
+  int device_index = deviceAddressToDeviceIndex(device_address);
+  if (device_index < 0)
   {
-    if (output_enable_pin_ != NO_OUTPUT_ENABLE_PIN)
-    {
-      digitalWrite(output_enable_pin_,HIGH);
-    }
+    return;
   }
+  Mode1Register mode1_register = readMode1Register(device_index);
+  mode1_register.fields.sub1 = DOES_NOT_RESPOND;
+  write(device_address,MODE1_REGISTER_ADDRESS,mode1_register.data);
 }
 
-void PCA9685::disableAllOutputs()
+void PCA9685::addDeviceToGroup1(uint8_t device_address)
 {
-  for (uint8_t device_index=0; device_index<DEVICE_COUNT_MAX; ++device_index)
+  int device_index = deviceAddressToDeviceIndex(device_address);
+  if (device_index < 0)
   {
-    disableOutputs(device_index);
+    return;
   }
+  Mode1Register mode1_register = readMode1Register(device_index);
+  mode1_register.fields.sub2 = DOES_RESPOND;
+  write(device_address,MODE1_REGISTER_ADDRESS,mode1_register.data);
+}
+
+void PCA9685::removeDeviceFromGroup1(uint8_t device_address)
+{
+  int device_index = deviceAddressToDeviceIndex(device_address);
+  if (device_index < 0)
+  {
+    return;
+  }
+  Mode1Register mode1_register = readMode1Register(device_index);
+  mode1_register.fields.sub2 = DOES_NOT_RESPOND;
+  write(device_address,MODE1_REGISTER_ADDRESS,mode1_register.data);
+}
+
+void PCA9685::addDeviceToGroup2(uint8_t device_address)
+{
+  int device_index = deviceAddressToDeviceIndex(device_address);
+  if (device_index < 0)
+  {
+    return;
+  }
+  Mode1Register mode1_register = readMode1Register(device_index);
+  mode1_register.fields.sub3 = DOES_RESPOND;
+  write(device_address,MODE1_REGISTER_ADDRESS,mode1_register.data);
+}
+
+void PCA9685::removeDeviceFromGroup2(uint8_t device_address)
+{
+  int device_index = deviceAddressToDeviceIndex(device_address);
+  if (device_index < 0)
+  {
+    return;
+  }
+  Mode1Register mode1_register = readMode1Register(device_index);
+  mode1_register.fields.sub3 = DOES_NOT_RESPOND;
+  write(device_address,MODE1_REGISTER_ADDRESS,mode1_register.data);
 }
 
 uint16_t PCA9685::getFrequencyMin()
@@ -110,20 +143,35 @@ uint16_t PCA9685::getFrequencyMax()
   return MICROSECONDS_PER_SECOND / PWM_PERIOD_MIN_US;
 }
 
-void PCA9685::setFrequency(uint8_t device_index,
+void PCA9685::setOneDeviceToFrequency(uint8_t device_address,
   uint16_t frequency)
 {
-  if (device_index < device_count_)
+  int device_index = deviceAddressToDeviceIndex(device_address);
+  if (device_index < 0)
   {
-    uint8_t prescale = frequencyToPrescale(frequency);
+    return;
+  }
+  uint8_t prescale = frequencyToPrescale(frequency);
+  setPrescale(device_index,prescale);
+}
+
+void PCA9685::setAllDevicesToFrequency(uint16_t frequency)
+{
+  uint8_t prescale = frequencyToPrescale(frequency);
+  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  {
     setPrescale(device_index,prescale);
   }
 }
 
-void PCA9685::setAllFrequencies(uint16_t frequency)
+uint8_t PCA9685::getChannelCount()
 {
-  uint8_t prescale = frequencyToPrescale(frequency);
-  setAllPrescales(prescale);
+  return CHANNELS_PER_DEVICE * device_count_;
+}
+
+uint8_t PCA9685::getDeviceChannelCount()
+{
+  return CHANNELS_PER_DEVICE;
 }
 
 uint16_t PCA9685::getTimeMin()
@@ -136,99 +184,267 @@ uint16_t PCA9685::getTimeMax()
   return TIME_MAX;
 }
 
-void PCA9685::setOnAndOffTime(uint8_t channel,
+void PCA9685::setChannelOnAndOffTime(uint8_t channel,
   uint16_t on_time,
   uint16_t off_time)
 {
-  uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * channel;
-  setRegisterOnAndOffTime(register_address,on_time,off_time);
+  if (channel >= getChannelCount())
+  {
+    return;
+  }
+  uint8_t device_index = channelToDeviceIndex(channel);
+  uint8_t device_channel = channelToDeviceChannel(channel);
+  uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
+  setOnAndOffTimeByRegister(device_addresses_[device_index],register_address,on_time,off_time);
 }
 
-void PCA9685::setAllChannelsOnAndOffTimes(uint16_t on_time,
+void PCA9685::setDeviceChannelOnAndOffTime(uint8_t device_address,
+  uint8_t device_channel,
+  uint16_t on_time,
+  uint16_t off_time)
+{
+  if (device_channel >= getDeviceChannelCount())
+  {
+    return;
+  }
+  uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
+  setOnAndOffTimeByRegister(device_address,register_address,on_time,off_time);
+}
+
+void PCA9685::setAllDeviceChannelsOnAndOffTime(uint8_t device_address,
+  uint16_t on_time,
   uint16_t off_time)
 {
   uint8_t register_address = ALL_LED_ON_L_REGISTER_ADDRESS;
-  setOnAndOffTimes(register_address,on_time,off_time);
+  setOnAndOffTimeByRegister(device_address,register_address,on_time,off_time);
 }
 
 void PCA9685::setChannelOnTime(uint8_t channel,
   uint16_t on_time)
 {
-  uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * channel;
-  setOnTime(register_address,on_time);
+  if (channel >= getChannelCount())
+  {
+    return;
+  }
+  uint8_t device_index = channelToDeviceIndex(channel);
+  uint8_t device_channel = channelToDeviceChannel(channel);
+  uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
+  setOnTimeByRegister(device_addresses_[device_index],register_address,on_time);
 }
 
-void PCA9685::setAllChannelsOnTime(uint16_t on_time)
+void PCA9685::setDeviceChannelOnTime(uint8_t device_address,
+  uint8_t device_channel,
+  uint16_t on_time)
+{
+  if (device_channel >= getDeviceChannelCount())
+  {
+    return;
+  }
+  uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
+  setOnTimeByRegister(device_address,register_address,on_time);
+}
+
+void PCA9685::setAllDeviceChannelsOnTime(uint8_t device_address,
+  uint16_t on_time)
 {
   uint8_t register_address = ALL_LED_ON_L_REGISTER_ADDRESS;
-  setOnTime(register_address,on_time);
+  setOnTimeByRegister(device_address,register_address,on_time);
 }
 
 void PCA9685::setChannelOffTime(uint8_t channel,
   uint16_t off_time)
 {
-  uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * channel + LED_REGISTERS_SIZE / 2;
-  setOffTime(register_address,off_time);
+  if (channel >= getChannelCount())
+  {
+    return;
+  }
+  uint8_t device_index = channelToDeviceIndex(channel);
+  uint8_t device_channel = channelToDeviceChannel(channel);
+  uint8_t register_address = LED0_OFF_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
+  setOffTimeByRegister(device_addresses_[device_index],register_address,off_time);
 }
 
-void PCA9685::setAllChannelsOffTime(uint16_t off_time)
+void PCA9685::setDeviceChannelOffTime(uint8_t device_address,
+  uint8_t device_channel,
+  uint16_t off_time)
 {
-  uint8_t register_address = ALL_LED_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE / 2;
-  setOffTime(register_address,off_time);
+  if (device_channel >= getDeviceChannelCount())
+  {
+    return;
+  }
+  uint8_t register_address = LED0_OFF_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
+  setOffTimeByRegister(device_address,register_address,off_time);
 }
 
-void PCA9685::setOutputsInverted()
+void PCA9685::setAllDeviceChannelsOffTime(uint8_t device_address,
+  uint16_t off_time)
 {
-  Mode2Register mode2_register = readMode2Register();
-  mode2_register.fields.invrt = OUTPUTS_INVERTED;
-  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
+  uint8_t register_address = ALL_LED_OFF_L_REGISTER_ADDRESS;
+  setOffTimeByRegister(device_address,register_address,off_time);
 }
 
-void PCA9685::setOutputsNotInverted()
+void PCA9685::setOneDeviceOutputsInverted(uint8_t device_address)
 {
-  Mode2Register mode2_register = readMode2Register();
-  mode2_register.fields.invrt = OUTPUTS_NOT_INVERTED;
-  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
+  int device_index = deviceAddressToDeviceIndex(device_address);
+  if (device_index < 0)
+  {
+    return;
+  }
+  setOutputsInverted(device_index);
 }
 
-void PCA9685::setOutputsToTotemPole()
+void PCA9685::setAllDevicesOutputsInverted()
 {
-  Mode2Register mode2_register = readMode2Register();
-  mode2_register.fields.outdrv = OUTPUTS_TOTEM_POLE;
-  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
+  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  {
+    setOutputsInverted(device_index);
+  }
 }
 
-void PCA9685::setOutputsToOpenDrain()
+void PCA9685::setOneDeviceOutputsNotInverted(uint8_t device_address)
 {
-  Mode2Register mode2_register = readMode2Register();
-  mode2_register.fields.outdrv = OUTPUTS_OPEN_DRAIN;
-  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
+  int device_index = deviceAddressToDeviceIndex(device_address);
+  if (device_index < 0)
+  {
+    return;
+  }
+  setOutputsNotInverted(device_index);
 }
 
-void PCA9685::setOutputsLowWhenDisabled()
+void PCA9685::setAllDevicesOutputsNotInverted()
 {
-  Mode2Register mode2_register = readMode2Register();
-  mode2_register.fields.outne = OUTPUTS_LOW_WHEN_DISABLED;
-  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
+  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  {
+    setOutputsNotInverted(device_index);
+  }
 }
 
-void PCA9685::setOutputsHighWhenDisabled()
+void PCA9685::setOneDeviceOutputsToTotemPole(uint8_t device_address)
 {
-  Mode2Register mode2_register = readMode2Register();
-  mode2_register.fields.outne = OUTPUTS_HIGH_WHEN_DISABLED;
-  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
+  int device_index = deviceAddressToDeviceIndex(device_address);
+  if (device_index < 0)
+  {
+    return;
+  }
+  setOutputsToTotemPole(device_index);
 }
 
-void PCA9685::setOutputsHighImpedanceWhenDisabled()
+void PCA9685::setAllDevicesOutputsToTotemPole()
 {
-  Mode2Register mode2_register = readMode2Register();
-  mode2_register.fields.outne = OUTPUTS_HIGH_IMPEDANCE_WHEN_DISABLED;
-  writeByte(MODE2_REGISTER_ADDRESS,mode2_register.data);
+  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  {
+    setOutputsToTotemPole(device_index);
+  }
+}
+
+void PCA9685::setOneDeviceOutputsToOpenDrain(uint8_t device_address)
+{
+  int device_index = deviceAddressToDeviceIndex(device_address);
+  if (device_index < 0)
+  {
+    return;
+  }
+  setOutputsToOpenDrain(device_index);
+}
+
+void PCA9685::setAllDevicesOutputsToOpenDrain()
+{
+  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  {
+    setOutputsToOpenDrain(device_index);
+  }
+}
+
+void PCA9685::setOneDeviceOutputsLowWhenDisabled(uint8_t device_address)
+{
+  int device_index = deviceAddressToDeviceIndex(device_address);
+  if (device_index < 0)
+  {
+    return;
+  }
+  setOutputsLowWhenDisabled(device_index);
+}
+
+void PCA9685::setAllDevicesOutputsLowWhenDisabled()
+{
+  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  {
+    setOutputsLowWhenDisabled(device_index);
+  }
+}
+
+void PCA9685::setOneDeviceOutputsHighWhenDisabled(uint8_t device_address)
+{
+  int device_index = deviceAddressToDeviceIndex(device_address);
+  if (device_index < 0)
+  {
+    return;
+  }
+  setOutputsHighWhenDisabled(device_index);
+}
+
+void PCA9685::setAllDevicesOutputsHighWhenDisabled()
+{
+  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  {
+    setOutputsHighWhenDisabled(device_index);
+  }
+}
+
+void PCA9685::setOneDeviceOutputsHighImpedanceWhenDisabled(uint8_t device_address)
+{
+  int device_index = deviceAddressToDeviceIndex(device_address);
+  if (device_index < 0)
+  {
+    return;
+  }
+  setOutputsHighImpedanceWhenDisabled(device_index);
+}
+
+void PCA9685::setAllDevicesOutputsHighImpedanceWhenDisabled()
+{
+  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  {
+    setOutputsHighImpedanceWhenDisabled(device_index);
+  }
 }
 
 // private
 
-void PCA9685::writeByte(uint8_t device_address,
+int PCA9685::deviceAddressToDeviceIndex(uint8_t device_address)
+{
+  uint8_t device_index = DEVICE_INDEX_NONE;
+  if (device_address == DEVICE_ADDRESS_ALL)
+  {
+    device_index = DEVICE_INDEX_ALL;
+  }
+  else if (device_address == DEVICE_ADDRESS_GROUP0)
+  {
+    device_index = DEVICE_INDEX_GROUP0;
+  }
+  else if (device_address == DEVICE_ADDRESS_GROUP1)
+  {
+    device_index = DEVICE_INDEX_GROUP1;
+  }
+  else if (device_address == DEVICE_ADDRESS_GROUP2)
+  {
+    device_index = DEVICE_INDEX_GROUP2;
+  }
+  else
+  {
+    for (uint8_t index=0; index<device_count_; ++index)
+    {
+      if (device_address == device_addresses_[index])
+      {
+        device_index = index;
+        break;
+      }
+    }
+  }
+  return device_index;
+}
+
+void PCA9685::write(uint8_t device_address,
   uint8_t register_address,
   uint8_t data)
 {
@@ -238,9 +454,10 @@ void PCA9685::writeByte(uint8_t device_address,
   wire_ptr_->endTransmission();
 }
 
-uint8_t PCA9685::readByte(uint8_t device_address,
+uint8_t PCA9685::read(uint8_t device_index,
   uint8_t register_address)
 {
+  uint8_t device_address = device_addresses_[device_index];
   wire_ptr_->beginTransmission(device_address);
   wire_ptr_->write(register_address);
   wire_ptr_->endTransmission();
@@ -249,10 +466,10 @@ uint8_t PCA9685::readByte(uint8_t device_address,
   return wire_ptr_->read();
 }
 
-PCA9685::Mode1Register PCA9685::readMode1Register()
+PCA9685::Mode1Register PCA9685::readMode1Register(uint8_t device_index)
 {
   Mode1Register mode1_register;
-  mode1_register.data = readByte(MODE1_REGISTER_ADDRESS);
+  mode1_register.data = read(device_index,MODE1_REGISTER_ADDRESS);
   // Serial << "restart: " << mode1_register.fields.restart << "\n";
   // Serial << "extclk: " << mode1_register.fields.extclk << "\n";
   // Serial << "ai: " << mode1_register.fields.ai << "\n";
@@ -264,10 +481,10 @@ PCA9685::Mode1Register PCA9685::readMode1Register()
   return mode1_register;
 }
 
-PCA9685::Mode2Register PCA9685::readMode2Register()
+PCA9685::Mode2Register PCA9685::readMode2Register(uint8_t device_index)
 {
   Mode2Register mode2_register;
-  mode2_register.data = readByte(MODE2_REGISTER_ADDRESS);
+  mode2_register.data = read(device_index,MODE2_REGISTER_ADDRESS);
   // Serial << "outne: " << mode2_register.fields.outne << "\n";
   // Serial << "outdrv: " << mode2_register.fields.outdrv << "\n";
   // Serial << "och: " << mode2_register.fields.och << "\n";
@@ -275,24 +492,32 @@ PCA9685::Mode2Register PCA9685::readMode2Register()
   return mode2_register;
 }
 
-void PCA9685::sleep()
+void PCA9685::sleep(uint8_t device_index)
 {
-  Mode1Register mode1_register = readMode1Register();
+  Mode1Register mode1_register = readMode1Register(device_index);
   mode1_register.fields.sleep = SLEEP;
-  writeByte(MODE1_REGISTER_ADDRESS,mode1_register.data);
+  write(device_addresses_[device_index],MODE1_REGISTER_ADDRESS,mode1_register.data);
 }
 
-void PCA9685::wake()
+void PCA9685::wake(uint8_t device_index)
 {
-  Mode1Register mode1_register = readMode1Register();
+  Mode1Register mode1_register = readMode1Register(device_index);
   mode1_register.fields.sleep = WAKE;
   mode1_register.fields.ai = AUTO_INCREMENT_ENABLED;
-  writeByte(MODE1_REGISTER_ADDRESS,mode1_register.data);
-  delay(1);
+  write(device_addresses_[device_index],MODE1_REGISTER_ADDRESS,mode1_register.data);
   if (mode1_register.fields.restart == RESTART_ENABLED)
   {
+    delay(1);
     mode1_register.fields.restart = RESTART_CLEAR;
-    writeByte(MODE1_REGISTER_ADDRESS,mode1_register.data);
+    write(device_addresses_[device_index],MODE1_REGISTER_ADDRESS,mode1_register.data);
+  }
+}
+
+void PCA9685::wakeAll()
+{
+  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  {
+    wake(device_index);
   }
 }
 
@@ -304,11 +529,22 @@ uint8_t PCA9685::frequencyToPrescale(uint16_t frequency)
   return prescale;
 }
 
-void PCA9685::setPrescale(uint8_t prescale)
+void PCA9685::setPrescale(uint8_t device_index,
+  uint8_t prescale)
 {
-  sleep();
-  writeByte(PRE_SCALE_REGISTER_ADDRESS,prescale);
-  wake();
+  sleep(device_index);
+  write(device_addresses_[device_index],PRE_SCALE_REGISTER_ADDRESS,prescale);
+  wake(device_index);
+}
+
+uint8_t PCA9685::channelToDeviceIndex(uint8_t channel)
+{
+  return channel / CHANNELS_PER_DEVICE;
+}
+
+uint8_t PCA9685::channelToDeviceChannel(uint8_t channel)
+{
+  return channel % CHANNELS_PER_DEVICE;
 }
 
 void PCA9685::setOnAndOffTimeByRegister(uint8_t device_address,
@@ -345,4 +581,53 @@ void PCA9685::setOffTimeByRegister(uint8_t device_address,
   wire_ptr_->write(off_time);
   wire_ptr_->write(off_time >> BITS_PER_BYTE);
   wire_ptr_->endTransmission();
+}
+
+void PCA9685::setOutputsInverted(uint8_t device_index)
+{
+  Mode2Register mode2_register = readMode2Register(device_index);
+  mode2_register.fields.invrt = OUTPUTS_INVERTED;
+  write(device_addresses_[device_index],MODE2_REGISTER_ADDRESS,mode2_register.data);
+}
+
+void PCA9685::setOutputsNotInverted(uint8_t device_index)
+{
+  Mode2Register mode2_register = readMode2Register(device_index);
+  mode2_register.fields.invrt = OUTPUTS_NOT_INVERTED;
+  write(device_addresses_[device_index],MODE2_REGISTER_ADDRESS,mode2_register.data);
+}
+
+void PCA9685::setOutputsToTotemPole(uint8_t device_index)
+{
+  Mode2Register mode2_register = readMode2Register(device_index);
+  mode2_register.fields.outdrv = OUTPUTS_TOTEM_POLE;
+  write(device_addresses_[device_index],MODE2_REGISTER_ADDRESS,mode2_register.data);
+}
+
+void PCA9685::setOutputsToOpenDrain(uint8_t device_index)
+{
+  Mode2Register mode2_register = readMode2Register(device_index);
+  mode2_register.fields.outdrv = OUTPUTS_OPEN_DRAIN;
+  write(device_addresses_[device_index],MODE2_REGISTER_ADDRESS,mode2_register.data);
+}
+
+void PCA9685::setOutputsLowWhenDisabled(uint8_t device_index)
+{
+  Mode2Register mode2_register = readMode2Register(device_index);
+  mode2_register.fields.outne = OUTPUTS_LOW_WHEN_DISABLED;
+  write(device_addresses_[device_index],MODE2_REGISTER_ADDRESS,mode2_register.data);
+}
+
+void PCA9685::setOutputsHighWhenDisabled(uint8_t device_index)
+{
+  Mode2Register mode2_register = readMode2Register(device_index);
+  mode2_register.fields.outne = OUTPUTS_HIGH_WHEN_DISABLED;
+  write(device_addresses_[device_index],MODE2_REGISTER_ADDRESS,mode2_register.data);
+}
+
+void PCA9685::setOutputsHighImpedanceWhenDisabled(uint8_t device_index)
+{
+  Mode2Register mode2_register = readMode2Register(device_index);
+  mode2_register.fields.outne = OUTPUTS_HIGH_IMPEDANCE_WHEN_DISABLED;
+  write(device_addresses_[device_index],MODE2_REGISTER_ADDRESS,mode2_register.data);
 }
