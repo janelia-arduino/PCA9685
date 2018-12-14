@@ -252,10 +252,6 @@ void PCA9685::setChannelPulseWidth(uint8_t channel,
   uint16_t on_time;
   uint16_t off_time;
   pulseWidthAndPhaseShiftToOnTimeAndOffTime(pulse_width,phase_shift,on_time,off_time);
-  Serial << "pulse_width: " << pulse_width << "\n";
-  Serial << "phase_shift: " << phase_shift << "\n";
-  Serial << "on_time: " << on_time << "\n";
-  Serial << "off_time: " << off_time << "\n";
   setChannelOnAndOffTime(channel,on_time,off_time);
 }
 

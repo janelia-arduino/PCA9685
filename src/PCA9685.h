@@ -8,7 +8,7 @@
 #define PCA9685_H
 #include <Arduino.h>
 #include <Wire.h>
-#include <Streaming.h>
+
 
 class PCA9685
 {

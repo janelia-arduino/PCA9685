@@ -1,8 +1,6 @@
 #include <Arduino.h>
 #include <PCA9685.h>
 
-#include <Streaming.h>
-
 
 const uint8_t DEVICE_ADDRESS = 0x40;
 const size_t OUTPUT_ENABLE_PIN = 2;
@@ -35,8 +33,6 @@ PCA9685 pca9685;
 
 void setup()
 {
-  Serial.begin(115200);
-
   pca9685.setWire(Wire);
   pca9685.addDevice(DEVICE_ADDRESS);
   pca9685.resetAllDevices();
@@ -75,8 +71,6 @@ void loop()
       percent_delay = EXAMPLE3_PERCENT_DELAY;
       break;
   }
-  Serial << "\npercent_delay: " << percent_delay << "\n";
-  Serial << "duty_cycle: " << duty_cycle << "\n";
 
   pca9685.setChannelDutyCycle(CHANNEL,duty_cycle,percent_delay);
 
