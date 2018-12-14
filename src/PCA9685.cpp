@@ -174,6 +174,112 @@ uint8_t PCA9685::getDeviceChannelCount()
   return CHANNELS_PER_DEVICE;
 }
 
+double PCA9685::getDutyCycleMin()
+{
+  return PERCENT_MIN;
+}
+
+double PCA9685::getDutyCycleMax()
+{
+  return PERCENT_MAX;
+}
+
+double PCA9685::getPercentDelayMin()
+{
+  return PERCENT_MIN;
+}
+
+double PCA9685::getPercentDelayMax()
+{
+  return PERCENT_MAX;
+}
+
+void PCA9685::setChannelDutyCycle(uint8_t channel,
+    double duty_cycle,
+    double percent_delay)
+{
+  uint16_t pulse_width;
+  uint16_t phase_shift;
+  dutyCycleAndPercentDelayToPulseWidthAndPhaseShift(duty_cycle,percent_delay,pulse_width,phase_shift);
+  setChannelPulseWidth(channel,pulse_width,phase_shift);
+}
+
+void PCA9685::setDeviceChannelDutyCycle(uint8_t device_address,
+    uint8_t device_channel,
+    double duty_cycle,
+    double percent_delay)
+{
+  uint16_t pulse_width;
+  uint16_t phase_shift;
+  dutyCycleAndPercentDelayToPulseWidthAndPhaseShift(duty_cycle,percent_delay,pulse_width,phase_shift);
+  setDeviceChannelPulseWidth(device_address,device_channel,pulse_width,phase_shift);
+}
+
+void PCA9685::setAllDeviceChannelsDutyCycle(uint8_t device_address,
+    double duty_cycle,
+    double percent_delay)
+{
+  uint16_t pulse_width;
+  uint16_t phase_shift;
+  dutyCycleAndPercentDelayToPulseWidthAndPhaseShift(duty_cycle,percent_delay,pulse_width,phase_shift);
+  setAllDeviceChannelsPulseWidth(device_address,pulse_width,phase_shift);
+}
+
+uint16_t PCA9685::getPulseWidthMin()
+{
+  return TIME_MIN;
+}
+
+uint16_t PCA9685::getPulseWidthMax()
+{
+  return TIME_MAX;
+}
+
+uint16_t PCA9685::getPhaseShiftMin()
+{
+  return TIME_MIN;
+}
+
+uint16_t PCA9685::getPhaseShiftMax()
+{
+  return TIME_MAX - 1;
+}
+
+void PCA9685::setChannelPulseWidth(uint8_t channel,
+    uint16_t pulse_width,
+    uint16_t phase_shift)
+{
+  uint16_t on_time;
+  uint16_t off_time;
+  pulseWidthAndPhaseShiftToOnTimeAndOffTime(pulse_width,phase_shift,on_time,off_time);
+  Serial << "pulse_width: " << pulse_width << "\n";
+  Serial << "phase_shift: " << phase_shift << "\n";
+  Serial << "on_time: " << on_time << "\n";
+  Serial << "off_time: " << off_time << "\n";
+  setChannelOnAndOffTime(channel,on_time,off_time);
+}
+
+void PCA9685::setDeviceChannelPulseWidth(uint8_t device_address,
+    uint8_t device_channel,
+    uint16_t pulse_width,
+    uint16_t phase_shift)
+{
+  uint16_t on_time;
+  uint16_t off_time;
+  pulseWidthAndPhaseShiftToOnTimeAndOffTime(pulse_width,phase_shift,on_time,off_time);
+  setDeviceChannelOnAndOffTime(device_address,device_channel,on_time,off_time);
+}
+
+void PCA9685::setAllDeviceChannelsPulseWidth(uint8_t device_address,
+    uint16_t pulse_width,
+    uint16_t phase_shift)
+{
+  uint16_t on_time;
+  uint16_t off_time;
+  pulseWidthAndPhaseShiftToOnTimeAndOffTime(pulse_width,phase_shift,on_time,off_time);
+  setAllDeviceChannelsOnAndOffTime(device_address,on_time,off_time);
+}
+
 uint16_t PCA9685::getTimeMin()
 {
   return TIME_MIN;
@@ -545,6 +651,41 @@ uint8_t PCA9685::channelToDeviceIndex(uint8_t channel)
 uint8_t PCA9685::channelToDeviceChannel(uint8_t channel)
 {
   return channel % CHANNELS_PER_DEVICE;
+}
+
+void PCA9685::dutyCycleAndPercentDelayToPulseWidthAndPhaseShift(double duty_cycle,
+  double percent_delay,
+  uint16_t & pulse_width,
+  uint16_t & phase_shift)
+{
+  pulse_width = round(((double)TIME_MAX * duty_cycle) / (double)PERCENT_MAX);
+  phase_shift = round(((double)TIME_MAX * percent_delay) / (double)PERCENT_MAX);
+  // datasheet says to subtract 1
+  if (phase_shift >= 1)
+  {
+    phase_shift -= 1;
+  }
+}
+
+void PCA9685::pulseWidthAndPhaseShiftToOnTimeAndOffTime(uint16_t pulse_width,
+  uint16_t phase_shift,
+  uint16_t & on_time,
+  uint16_t & off_time)
+{
+  if (pulse_width == 0)
+  {
+    on_time = TIME_MIN;
+    off_time = TIME_MAX;
+    return;
+  }
+  else if (pulse_width >= TIME_MAX)
+  {
+    on_time = TIME_MAX;
+    off_time = TIME_MIN;
+    return;
+  }
+  on_time = constrain(phase_shift,getPhaseShiftMin(),getPhaseShiftMax());
+  off_time = (on_time + pulse_width) % TIME_MAX;
 }
 
 void PCA9685::setOnAndOffTimeByRegister(uint8_t device_address,

@@ -8,7 +8,7 @@ const size_t OUTPUT_ENABLE_PIN = 2;
 const size_t LOOP_DELAY = 100;
 const uint16_t FREQUENCY = 200;
 const uint16_t TIME_INCREMENT = 100;
-const uint16_t CHANNEL = 0;
+const uint8_t CHANNEL = 0;
 
 uint16_t time_min;
 uint16_t time_max;

@@ -8,6 +8,7 @@
 #define PCA9685_H
 #include <Arduino.h>
 #include <Wire.h>
+#include <Streaming.h>
 
 class PCA9685
 {
@@ -16,8 +17,8 @@ public:
 
   void setWire(TwoWire & wire=Wire);
 
-  // device_address=0x40
-  // when all device address hardware select lines are low
+  // device_address=0x40 when all device address
+  // hardware select lines are low
   // cannot use reserved addresses
   void addDevice(uint8_t device_address);
   void resetAllDevices();
@@ -45,6 +46,36 @@ public:
 
   uint8_t getChannelCount();
   uint8_t getDeviceChannelCount();
+
+  double getDutyCycleMin();
+  double getDutyCycleMax();
+  double getPercentDelayMin();
+  double getPercentDelayMax();
+  void setChannelDutyCycle(uint8_t channel,
+    double duty_cycle,
+    double percent_delay=0);
+  void setDeviceChannelDutyCycle(uint8_t device_address,
+    uint8_t device_channel,
+    double duty_cycle,
+    double percent_delay=0);
+  void setAllDeviceChannelsDutyCycle(uint8_t device_address,
+    double duty_cycle,
+    double percent_delay=0);
+
+  uint16_t getPulseWidthMin();
+  uint16_t getPulseWidthMax();
+  uint16_t getPhaseShiftMin();
+  uint16_t getPhaseShiftMax();
+  void setChannelPulseWidth(uint8_t channel,
+    uint16_t pulse_width,
+    uint16_t phase_shift=0);
+  void setDeviceChannelPulseWidth(uint8_t device_address,
+    uint8_t device_channel,
+    uint16_t pulse_width,
+    uint16_t phase_shift=0);
+  void setAllDeviceChannelsPulseWidth(uint8_t device_address,
+    uint16_t pulse_width,
+    uint16_t phase_shift=0);
 
   uint16_t getTimeMin();
   uint16_t getTimeMax();
@@ -166,6 +197,16 @@ private:
   uint8_t channelToDeviceIndex(uint8_t channel);
   uint8_t channelToDeviceChannel(uint8_t channel);
 
+  void dutyCycleAndPercentDelayToPulseWidthAndPhaseShift(double duty_cycle,
+    double percent_delay,
+    uint16_t & pulse_width,
+    uint16_t & phase_shift);
+
+  void pulseWidthAndPhaseShiftToOnTimeAndOffTime(uint16_t pulse_width,
+    uint16_t phase_shift,
+    uint16_t & on_time,
+    uint16_t & off_time);
+
   void setOnAndOffTimeByRegister(uint8_t device_address,
     uint8_t register_address,
     uint16_t on_time,
@@ -228,7 +269,10 @@ private:
   const static uint8_t RESTART_CLEAR = 1;
 
   const static uint16_t TIME_MIN = 0;
-  const static uint16_t TIME_MAX = 4095;
+  const static uint16_t TIME_MAX = 4096;
+
+  const static uint8_t PERCENT_MIN = 0;
+  const static uint8_t PERCENT_MAX = 100;
 };
 
 #endif
