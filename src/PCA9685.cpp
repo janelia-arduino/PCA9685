@@ -16,6 +16,223 @@ PCA9685::PCA9685()
   }
 }
 
+void PCA9685::setupSingleDevice(TwoWire & wire,
+    uint8_t device_address)
+{
+  setWire(Wire);
+  addDevice(device_address);
+  resetAllDevices();
+}
+
+void PCA9685::setupOutputEnablePin(size_t output_enable_pin)
+{
+  pinMode(output_enable_pin,OUTPUT);
+  digitalWrite(output_enable_pin,HIGH);
+}
+
+void PCA9685::enableOutputs(size_t output_enable_pin)
+{
+  digitalWrite(output_enable_pin,LOW);
+}
+
+void PCA9685::disableOutputs(size_t output_enable_pin)
+{
+  digitalWrite(output_enable_pin,HIGH);
+}
+
+uint16_t PCA9685::getFrequencyMin()
+{
+  return MICROSECONDS_PER_SECOND / PWM_PERIOD_MAX_US;
+}
+
+uint16_t PCA9685::getFrequencyMax()
+{
+  return MICROSECONDS_PER_SECOND / PWM_PERIOD_MIN_US;
+}
+
+void PCA9685::setFrequency(uint16_t frequency)
+{
+  setAllDevicesToFrequency(frequency);
+}
+
+uint8_t PCA9685::getChannelCount()
+{
+  return CHANNELS_PER_DEVICE * device_count_;
+}
+
+double PCA9685::getDutyCycleMin()
+{
+  return PERCENT_MIN;
+}
+
+double PCA9685::getDutyCycleMax()
+{
+  return PERCENT_MAX;
+}
+
+double PCA9685::getPercentDelayMin()
+{
+  return PERCENT_MIN;
+}
+
+double PCA9685::getPercentDelayMax()
+{
+  return PERCENT_MAX;
+}
+
+void PCA9685::setChannelDutyCycle(uint8_t channel,
+    double duty_cycle,
+    double percent_delay)
+{
+  uint16_t pulse_width;
+  uint16_t phase_shift;
+  dutyCycleAndPercentDelayToPulseWidthAndPhaseShift(duty_cycle,percent_delay,pulse_width,phase_shift);
+  setChannelPulseWidth(channel,pulse_width,phase_shift);
+}
+
+void PCA9685::setAllChannelsDutyCycle(double duty_cycle,
+    double percent_delay)
+{
+  setAllDeviceChannelsDutyCycle(DEVICE_ADDRESS_ALL,duty_cycle,percent_delay);
+}
+
+uint16_t PCA9685::getPulseWidthMin()
+{
+  return TIME_MIN;
+}
+
+uint16_t PCA9685::getPulseWidthMax()
+{
+  return TIME_MAX;
+}
+
+uint16_t PCA9685::getPhaseShiftMin()
+{
+  return TIME_MIN;
+}
+
+uint16_t PCA9685::getPhaseShiftMax()
+{
+  return TIME_MAX - 1;
+}
+
+void PCA9685::setChannelPulseWidth(uint8_t channel,
+    uint16_t pulse_width,
+    uint16_t phase_shift)
+{
+  uint16_t on_time;
+  uint16_t off_time;
+  pulseWidthAndPhaseShiftToOnTimeAndOffTime(pulse_width,phase_shift,on_time,off_time);
+  setChannelOnAndOffTime(channel,on_time,off_time);
+}
+
+void PCA9685::setAllChannelsPulseWidth(uint16_t pulse_width,
+    uint16_t phase_shift)
+{
+  setAllDeviceChannelsPulseWidth(DEVICE_ADDRESS_ALL,pulse_width,phase_shift);
+}
+
+uint16_t PCA9685::getTimeMin()
+{
+  return TIME_MIN;
+}
+
+uint16_t PCA9685::getTimeMax()
+{
+  return TIME_MAX;
+}
+
+void PCA9685::setChannelOnAndOffTime(uint8_t channel,
+  uint16_t on_time,
+  uint16_t off_time)
+{
+  if (channel >= getChannelCount())
+  {
+    return;
+  }
+  uint8_t device_index = channelToDeviceIndex(channel);
+  uint8_t device_channel = channelToDeviceChannel(channel);
+  uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
+  setOnAndOffTimeByRegister(device_addresses_[device_index],register_address,on_time,off_time);
+}
+
+void PCA9685::setAllChannelsOnAndOffTime(uint16_t on_time,
+    uint16_t off_time)
+{
+  setAllDeviceChannelsOnAndOffTime(DEVICE_ADDRESS_ALL,on_time,off_time);
+}
+
+void PCA9685::setChannelOnTime(uint8_t channel,
+  uint16_t on_time)
+{
+  if (channel >= getChannelCount())
+  {
+    return;
+  }
+  uint8_t device_index = channelToDeviceIndex(channel);
+  uint8_t device_channel = channelToDeviceChannel(channel);
+  uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
+  setOnTimeByRegister(device_addresses_[device_index],register_address,on_time);
+}
+
+void PCA9685::setAllChannelsOnTime(uint16_t on_time)
+{
+  setAllDeviceChannelsOnTime(DEVICE_ADDRESS_ALL,on_time);
+}
+
+void PCA9685::setChannelOffTime(uint8_t channel,
+  uint16_t off_time)
+{
+  if (channel >= getChannelCount())
+  {
+    return;
+  }
+  uint8_t device_index = channelToDeviceIndex(channel);
+  uint8_t device_channel = channelToDeviceChannel(channel);
+  uint8_t register_address = LED0_OFF_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
+  setOffTimeByRegister(device_addresses_[device_index],register_address,off_time);
+}
+
+void PCA9685::setAllChannelsOffTime(uint16_t off_time)
+{
+  setAllDeviceChannelsOffTime(DEVICE_ADDRESS_ALL,off_time);
+}
+
+void PCA9685::setOutputsInverted()
+{
+  setAllDevicesOutputsInverted();
+}
+
+void PCA9685::setOutputsNotInverted()
+{
+  setAllDevicesOutputsNotInverted();
+}
+
+void PCA9685::setOutputsToTotemPole()
+{
+  setAllDevicesOutputsToTotemPole();
+}
+
+void PCA9685::setOutputsToOpenDrain()
+{
+  setAllDevicesOutputsToOpenDrain();
+}
+
+void PCA9685::setOutputsLowWhenDisabled()
+{
+  setAllDevicesOutputsLowWhenDisabled();
+}
+
+void PCA9685::setOutputsHighWhenDisabled()
+{
+  setAllDevicesOutputsHighWhenDisabled();
+}
+
+void PCA9685::setOutputsHighImpedanceWhenDisabled()
+{
+  setAllDevicesOutputsHighImpedanceWhenDisabled();
+}
+
 void PCA9685::setWire(TwoWire & wire)
 {
   wire_ptr_ = &wire;
@@ -43,22 +260,6 @@ void PCA9685::resetAllDevices()
   wire_ptr_->endTransmission();
   delay(10);
   wakeAll();
-}
-
-void PCA9685::setupOutputEnablePin(size_t output_enable_pin)
-{
-  pinMode(output_enable_pin,OUTPUT);
-  digitalWrite(output_enable_pin,HIGH);
-}
-
-void PCA9685::enableOutputs(size_t output_enable_pin)
-{
-  digitalWrite(output_enable_pin,LOW);
-}
-
-void PCA9685::disableOutputs(size_t output_enable_pin)
-{
-  digitalWrite(output_enable_pin,HIGH);
 }
 
 void PCA9685::addDeviceToGroup0(uint8_t device_address)
@@ -133,17 +334,7 @@ void PCA9685::removeDeviceFromGroup2(uint8_t device_address)
   write(device_address,MODE1_REGISTER_ADDRESS,mode1_register.data);
 }
 
-uint16_t PCA9685::getFrequencyMin()
-{
-  return MICROSECONDS_PER_SECOND / PWM_PERIOD_MAX_US;
-}
-
-uint16_t PCA9685::getFrequencyMax()
-{
-  return MICROSECONDS_PER_SECOND / PWM_PERIOD_MIN_US;
-}
-
-void PCA9685::setOneDeviceToFrequency(uint8_t device_address,
+void PCA9685::setSingleDeviceToFrequency(uint8_t device_address,
   uint16_t frequency)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
@@ -164,44 +355,9 @@ void PCA9685::setAllDevicesToFrequency(uint16_t frequency)
   }
 }
 
-uint8_t PCA9685::getChannelCount()
-{
-  return CHANNELS_PER_DEVICE * device_count_;
-}
-
 uint8_t PCA9685::getDeviceChannelCount()
 {
   return CHANNELS_PER_DEVICE;
-}
-
-double PCA9685::getDutyCycleMin()
-{
-  return PERCENT_MIN;
-}
-
-double PCA9685::getDutyCycleMax()
-{
-  return PERCENT_MAX;
-}
-
-double PCA9685::getPercentDelayMin()
-{
-  return PERCENT_MIN;
-}
-
-double PCA9685::getPercentDelayMax()
-{
-  return PERCENT_MAX;
-}
-
-void PCA9685::setChannelDutyCycle(uint8_t channel,
-    double duty_cycle,
-    double percent_delay)
-{
-  uint16_t pulse_width;
-  uint16_t phase_shift;
-  dutyCycleAndPercentDelayToPulseWidthAndPhaseShift(duty_cycle,percent_delay,pulse_width,phase_shift);
-  setChannelPulseWidth(channel,pulse_width,phase_shift);
 }
 
 void PCA9685::setDeviceChannelDutyCycle(uint8_t device_address,
@@ -225,36 +381,6 @@ void PCA9685::setAllDeviceChannelsDutyCycle(uint8_t device_address,
   setAllDeviceChannelsPulseWidth(device_address,pulse_width,phase_shift);
 }
 
-uint16_t PCA9685::getPulseWidthMin()
-{
-  return TIME_MIN;
-}
-
-uint16_t PCA9685::getPulseWidthMax()
-{
-  return TIME_MAX;
-}
-
-uint16_t PCA9685::getPhaseShiftMin()
-{
-  return TIME_MIN;
-}
-
-uint16_t PCA9685::getPhaseShiftMax()
-{
-  return TIME_MAX - 1;
-}
-
-void PCA9685::setChannelPulseWidth(uint8_t channel,
-    uint16_t pulse_width,
-    uint16_t phase_shift)
-{
-  uint16_t on_time;
-  uint16_t off_time;
-  pulseWidthAndPhaseShiftToOnTimeAndOffTime(pulse_width,phase_shift,on_time,off_time);
-  setChannelOnAndOffTime(channel,on_time,off_time);
-}
-
 void PCA9685::setDeviceChannelPulseWidth(uint8_t device_address,
     uint8_t device_channel,
     uint16_t pulse_width,
@@ -274,30 +400,6 @@ void PCA9685::setAllDeviceChannelsPulseWidth(uint8_t device_address,
   uint16_t off_time;
   pulseWidthAndPhaseShiftToOnTimeAndOffTime(pulse_width,phase_shift,on_time,off_time);
   setAllDeviceChannelsOnAndOffTime(device_address,on_time,off_time);
-}
-
-uint16_t PCA9685::getTimeMin()
-{
-  return TIME_MIN;
-}
-
-uint16_t PCA9685::getTimeMax()
-{
-  return TIME_MAX;
-}
-
-void PCA9685::setChannelOnAndOffTime(uint8_t channel,
-  uint16_t on_time,
-  uint16_t off_time)
-{
-  if (channel >= getChannelCount())
-  {
-    return;
-  }
-  uint8_t device_index = channelToDeviceIndex(channel);
-  uint8_t device_channel = channelToDeviceChannel(channel);
-  uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
-  setOnAndOffTimeByRegister(device_addresses_[device_index],register_address,on_time,off_time);
 }
 
 void PCA9685::setDeviceChannelOnAndOffTime(uint8_t device_address,
@@ -321,19 +423,6 @@ void PCA9685::setAllDeviceChannelsOnAndOffTime(uint8_t device_address,
   setOnAndOffTimeByRegister(device_address,register_address,on_time,off_time);
 }
 
-void PCA9685::setChannelOnTime(uint8_t channel,
-  uint16_t on_time)
-{
-  if (channel >= getChannelCount())
-  {
-    return;
-  }
-  uint8_t device_index = channelToDeviceIndex(channel);
-  uint8_t device_channel = channelToDeviceChannel(channel);
-  uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
-  setOnTimeByRegister(device_addresses_[device_index],register_address,on_time);
-}
-
 void PCA9685::setDeviceChannelOnTime(uint8_t device_address,
   uint8_t device_channel,
   uint16_t on_time)
@@ -351,19 +440,6 @@ void PCA9685::setAllDeviceChannelsOnTime(uint8_t device_address,
 {
   uint8_t register_address = ALL_LED_ON_L_REGISTER_ADDRESS;
   setOnTimeByRegister(device_address,register_address,on_time);
-}
-
-void PCA9685::setChannelOffTime(uint8_t channel,
-  uint16_t off_time)
-{
-  if (channel >= getChannelCount())
-  {
-    return;
-  }
-  uint8_t device_index = channelToDeviceIndex(channel);
-  uint8_t device_channel = channelToDeviceChannel(channel);
-  uint8_t register_address = LED0_OFF_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
-  setOffTimeByRegister(device_addresses_[device_index],register_address,off_time);
 }
 
 void PCA9685::setDeviceChannelOffTime(uint8_t device_address,
@@ -385,7 +461,7 @@ void PCA9685::setAllDeviceChannelsOffTime(uint8_t device_address,
   setOffTimeByRegister(device_address,register_address,off_time);
 }
 
-void PCA9685::setOneDeviceOutputsInverted(uint8_t device_address)
+void PCA9685::setSingleDeviceOutputsInverted(uint8_t device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -403,7 +479,7 @@ void PCA9685::setAllDevicesOutputsInverted()
   }
 }
 
-void PCA9685::setOneDeviceOutputsNotInverted(uint8_t device_address)
+void PCA9685::setSingleDeviceOutputsNotInverted(uint8_t device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -421,7 +497,7 @@ void PCA9685::setAllDevicesOutputsNotInverted()
   }
 }
 
-void PCA9685::setOneDeviceOutputsToTotemPole(uint8_t device_address)
+void PCA9685::setSingleDeviceOutputsToTotemPole(uint8_t device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -439,7 +515,7 @@ void PCA9685::setAllDevicesOutputsToTotemPole()
   }
 }
 
-void PCA9685::setOneDeviceOutputsToOpenDrain(uint8_t device_address)
+void PCA9685::setSingleDeviceOutputsToOpenDrain(uint8_t device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -457,7 +533,7 @@ void PCA9685::setAllDevicesOutputsToOpenDrain()
   }
 }
 
-void PCA9685::setOneDeviceOutputsLowWhenDisabled(uint8_t device_address)
+void PCA9685::setSingleDeviceOutputsLowWhenDisabled(uint8_t device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -475,7 +551,7 @@ void PCA9685::setAllDevicesOutputsLowWhenDisabled()
   }
 }
 
-void PCA9685::setOneDeviceOutputsHighWhenDisabled(uint8_t device_address)
+void PCA9685::setSingleDeviceOutputsHighWhenDisabled(uint8_t device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -493,7 +569,7 @@ void PCA9685::setAllDevicesOutputsHighWhenDisabled()
   }
 }
 
-void PCA9685::setOneDeviceOutputsHighImpedanceWhenDisabled(uint8_t device_address)
+void PCA9685::setSingleDeviceOutputsHighImpedanceWhenDisabled(uint8_t device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)

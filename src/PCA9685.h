@@ -15,6 +15,64 @@ class PCA9685
 public:
   PCA9685();
 
+  // Convenience method when using a single device
+  void setupSingleDevice(TwoWire & wire=Wire,
+    uint8_t device_address=0x40);
+
+  // Methods for using a single device or multiple devices
+  void setupOutputEnablePin(size_t output_enable_pin);
+  void enableOutputs(size_t output_enable_pin);
+  void disableOutputs(size_t output_enable_pin);
+
+  uint16_t getFrequencyMin();
+  uint16_t getFrequencyMax();
+  void setFrequency(uint16_t frequency);
+
+  uint8_t getChannelCount();
+
+  double getDutyCycleMin();
+  double getDutyCycleMax();
+  double getPercentDelayMin();
+  double getPercentDelayMax();
+  void setChannelDutyCycle(uint8_t channel,
+    double duty_cycle,
+    double percent_delay=0);
+  void setAllChannelsDutyCycle(double duty_cycle,
+    double percent_delay=0);
+
+  uint16_t getPulseWidthMin();
+  uint16_t getPulseWidthMax();
+  uint16_t getPhaseShiftMin();
+  uint16_t getPhaseShiftMax();
+  void setChannelPulseWidth(uint8_t channel,
+    uint16_t pulse_width,
+    uint16_t phase_shift=0);
+  void setAllChannelsPulseWidth(uint16_t pulse_width,
+    uint16_t phase_shift=0);
+
+  uint16_t getTimeMin();
+  uint16_t getTimeMax();
+  void setChannelOnAndOffTime(uint8_t channel,
+    uint16_t on_time,
+    uint16_t off_time);
+  void setAllChannelsOnAndOffTime(uint16_t on_time,
+    uint16_t off_time);
+  void setChannelOnTime(uint8_t channel,
+    uint16_t on_time);
+  void setAllChannelsOnTime(uint16_t on_time);
+  void setChannelOffTime(uint8_t channel,
+    uint16_t off_time);
+  void setAllChannelsOffTime(uint16_t off_time);
+
+  void setOutputsInverted();
+  void setOutputsNotInverted();
+  void setOutputsToTotemPole();
+  void setOutputsToOpenDrain();
+  void setOutputsLowWhenDisabled();
+  void setOutputsHighWhenDisabled();
+  void setOutputsHighImpedanceWhenDisabled();
+
+  // Methods for using multiple devices
   void setWire(TwoWire & wire=Wire);
 
   // device_address=0x40 when all device address
@@ -22,10 +80,6 @@ public:
   // cannot use reserved addresses
   void addDevice(uint8_t device_address);
   void resetAllDevices();
-
-  void setupOutputEnablePin(size_t output_enable_pin);
-  void enableOutputs(size_t output_enable_pin);
-  void disableOutputs(size_t output_enable_pin);
 
   const static uint8_t DEVICE_ADDRESS_ALL = 0x70;
   const static uint8_t DEVICE_ADDRESS_GROUP0 = 0x71;
@@ -38,22 +92,12 @@ public:
   void addDeviceToGroup2(uint8_t device_address);
   void removeDeviceFromGroup2(uint8_t device_address);
 
-  uint16_t getFrequencyMin();
-  uint16_t getFrequencyMax();
-  void setOneDeviceToFrequency(uint8_t device_address,
+  void setSingleDeviceToFrequency(uint8_t device_address,
     uint16_t frequency);
   void setAllDevicesToFrequency(uint16_t frequency);
 
-  uint8_t getChannelCount();
   uint8_t getDeviceChannelCount();
 
-  double getDutyCycleMin();
-  double getDutyCycleMax();
-  double getPercentDelayMin();
-  double getPercentDelayMax();
-  void setChannelDutyCycle(uint8_t channel,
-    double duty_cycle,
-    double percent_delay=0);
   void setDeviceChannelDutyCycle(uint8_t device_address,
     uint8_t device_channel,
     double duty_cycle,
@@ -62,13 +106,6 @@ public:
     double duty_cycle,
     double percent_delay=0);
 
-  uint16_t getPulseWidthMin();
-  uint16_t getPulseWidthMax();
-  uint16_t getPhaseShiftMin();
-  uint16_t getPhaseShiftMax();
-  void setChannelPulseWidth(uint8_t channel,
-    uint16_t pulse_width,
-    uint16_t phase_shift=0);
   void setDeviceChannelPulseWidth(uint8_t device_address,
     uint8_t device_channel,
     uint16_t pulse_width,
@@ -77,11 +114,6 @@ public:
     uint16_t pulse_width,
     uint16_t phase_shift=0);
 
-  uint16_t getTimeMin();
-  uint16_t getTimeMax();
-  void setChannelOnAndOffTime(uint8_t channel,
-    uint16_t on_time,
-    uint16_t off_time);
   void setDeviceChannelOnAndOffTime(uint8_t device_address,
     uint8_t device_channel,
     uint16_t on_time,
@@ -89,34 +121,30 @@ public:
   void setAllDeviceChannelsOnAndOffTime(uint8_t device_address,
     uint16_t on_time,
     uint16_t off_time);
-  void setChannelOnTime(uint8_t channel,
-    uint16_t on_time);
   void setDeviceChannelOnTime(uint8_t device_address,
     uint8_t device_channel,
     uint16_t on_time);
   void setAllDeviceChannelsOnTime(uint8_t device_address,
     uint16_t on_time);
-  void setChannelOffTime(uint8_t channel,
-    uint16_t off_time);
   void setDeviceChannelOffTime(uint8_t device_address,
     uint8_t device_channel,
     uint16_t off_time);
   void setAllDeviceChannelsOffTime(uint8_t device_address,
     uint16_t off_time);
 
-  void setOneDeviceOutputsInverted(uint8_t device_address);
+  void setSingleDeviceOutputsInverted(uint8_t device_address);
   void setAllDevicesOutputsInverted();
-  void setOneDeviceOutputsNotInverted(uint8_t device_address);
+  void setSingleDeviceOutputsNotInverted(uint8_t device_address);
   void setAllDevicesOutputsNotInverted();
-  void setOneDeviceOutputsToTotemPole(uint8_t device_address);
+  void setSingleDeviceOutputsToTotemPole(uint8_t device_address);
   void setAllDevicesOutputsToTotemPole();
-  void setOneDeviceOutputsToOpenDrain(uint8_t device_address);
+  void setSingleDeviceOutputsToOpenDrain(uint8_t device_address);
   void setAllDevicesOutputsToOpenDrain();
-  void setOneDeviceOutputsLowWhenDisabled(uint8_t device_address);
+  void setSingleDeviceOutputsLowWhenDisabled(uint8_t device_address);
   void setAllDevicesOutputsLowWhenDisabled();
-  void setOneDeviceOutputsHighWhenDisabled(uint8_t device_address);
+  void setSingleDeviceOutputsHighWhenDisabled(uint8_t device_address);
   void setAllDevicesOutputsHighWhenDisabled();
-  void setOneDeviceOutputsHighImpedanceWhenDisabled(uint8_t device_address);
+  void setSingleDeviceOutputsHighImpedanceWhenDisabled(uint8_t device_address);
   void setAllDevicesOutputsHighImpedanceWhenDisabled();
 
 private:
