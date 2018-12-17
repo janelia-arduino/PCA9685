@@ -15,7 +15,7 @@ void setup()
   pca9685.setupOutputEnablePin(constants::output_enable_pin);
   pca9685.enableOutputs(constants::output_enable_pin);
 
-  pca9685.setFrequency(constants::frequency);
+  pca9685.setToFrequency(constants::frequency);
 
   example_index = 0;
 }

@@ -35,7 +35,7 @@ void loop()
   {
     frequency = frequency_min;
   }
-  pca9685.setFrequency(frequency);
+  pca9685.setToFrequency(frequency);
   frequency += constants::frequency_increment;
   delay(constants::loop_delay);
 }

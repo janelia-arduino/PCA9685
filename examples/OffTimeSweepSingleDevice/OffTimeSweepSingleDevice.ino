@@ -19,7 +19,7 @@ void setup()
 
   pca9685.setOutputsNotInverted();
 
-  pca9685.setFrequency(constants::frequency);
+  pca9685.setToFrequency(constants::frequency);
 
   time_min = pca9685.getTimeMin();
   time_max = pca9685.getTimeMax();

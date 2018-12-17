@@ -26,7 +26,8 @@ public:
 
   uint16_t getFrequencyMin();
   uint16_t getFrequencyMax();
-  void setFrequency(uint16_t frequency);
+  void setToFrequency(uint16_t frequency);
+  void setToHobbyServoFrequency();
 
   uint8_t getChannelCount();
 
@@ -95,6 +96,8 @@ public:
   void setSingleDeviceToFrequency(uint8_t device_address,
     uint16_t frequency);
   void setAllDevicesToFrequency(uint16_t frequency);
+  void setSingleDeviceToHobbyServoFrequency(uint8_t device_address);
+  void setAllDevicesToHobbyServoFrequency();
 
   uint8_t getDeviceChannelCount();
 
@@ -301,6 +304,8 @@ private:
 
   const static uint8_t PERCENT_MIN = 0;
   const static uint8_t PERCENT_MAX = 100;
+
+  const static uint16_t HOBBY_SERVO_FREQUENCY = 50;
 };
 
 #endif

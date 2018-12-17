@@ -50,9 +50,14 @@ uint16_t PCA9685::getFrequencyMax()
   return MICROSECONDS_PER_SECOND / PWM_PERIOD_MIN_US;
 }
 
-void PCA9685::setFrequency(uint16_t frequency)
+void PCA9685::setToFrequency(uint16_t frequency)
 {
   setAllDevicesToFrequency(frequency);
+}
+
+void PCA9685::setToHobbyServoFrequency()
+{
+  setAllDevicesToHobbyServoFrequency()
 }
 
 uint8_t PCA9685::getChannelCount()
@@ -353,6 +358,16 @@ void PCA9685::setAllDevicesToFrequency(uint16_t frequency)
   {
     setPrescale(device_index,prescale);
   }
+}
+
+void PCA9685::setSingleDeviceToHobbyServoFrequency(uint8_t device_address)
+{
+  setSingleDeviceToFrequency(device_address,HOBBY_SERVO_FREQUENCY);
+}
+
+void PCA9685::setAllDevicesToHobbyServoFrequency()
+{
+  setAllDevicesToFrequency(HOBBY_SERVO_FREQUENCY);
 }
 
 uint8_t PCA9685::getDeviceChannelCount()

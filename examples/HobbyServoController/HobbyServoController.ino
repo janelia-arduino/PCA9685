@@ -6,7 +6,9 @@
 
 PCA9685 pca9685;
 
-uint8_t example_index;
+uint16_t time_min;
+uint16_t time_max;
+uint16_t off_time;
 
 void setup()
 {
@@ -15,19 +17,11 @@ void setup()
   pca9685.setupOutputEnablePin(constants::output_enable_pin);
   pca9685.enableOutputs(constants::output_enable_pin);
 
-  pca9685.setToFrequency(constants::frequency);
-
-  example_index = 0;
+  pca9685.setToHobbyServoFrequency();
 }
 
 void loop()
 {
+  setChannelPulseWidth(constants::CHANNEL,4095);
   delay(constants::loop_delay);
-  if (example_index >= constants::EXAMPLE_COUNT)
-  {
-    example_index = 0;
-  }
-  constants::Example example = constants::examples[example_index++];
-
-  pca9685.setChannelOnAndOffTime(constants::channel,example.on_time,example.off_time);
 }
