@@ -22,6 +22,6 @@ void setup()
 
 void loop()
 {
-  setChannelPulseWidth(constants::CHANNEL,4095);
+  pca9685.setChannelPulseWidth(constants::channel,409);
   delay(constants::loop_delay);
 }

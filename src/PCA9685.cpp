@@ -57,7 +57,7 @@ void PCA9685::setToFrequency(uint16_t frequency)
 
 void PCA9685::setToHobbyServoFrequency()
 {
-  setAllDevicesToHobbyServoFrequency()
+  setAllDevicesToHobbyServoFrequency();
 }
 
 uint8_t PCA9685::getChannelCount()
