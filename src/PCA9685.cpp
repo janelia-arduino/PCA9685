@@ -17,7 +17,7 @@ PCA9685::PCA9685()
 }
 
 void PCA9685::setupSingleDevice(TwoWire & wire,
-    uint8_t device_address)
+  uint8_t device_address)
 {
   setWire(Wire);
   addDevice(device_address);
@@ -55,9 +55,9 @@ void PCA9685::setToFrequency(uint16_t frequency)
   setAllDevicesToFrequency(frequency);
 }
 
-void PCA9685::setToHobbyServoFrequency()
+void PCA9685::setToServoFrequency()
 {
-  setAllDevicesToHobbyServoFrequency();
+  setAllDevicesToServoFrequency();
 }
 
 uint8_t PCA9685::getChannelCount()
@@ -86,8 +86,8 @@ double PCA9685::getPercentDelayMax()
 }
 
 void PCA9685::setChannelDutyCycle(uint8_t channel,
-    double duty_cycle,
-    double percent_delay)
+  double duty_cycle,
+  double percent_delay)
 {
   uint16_t pulse_width;
   uint16_t phase_shift;
@@ -96,7 +96,7 @@ void PCA9685::setChannelDutyCycle(uint8_t channel,
 }
 
 void PCA9685::setAllChannelsDutyCycle(double duty_cycle,
-    double percent_delay)
+  double percent_delay)
 {
   setAllDeviceChannelsDutyCycle(DEVICE_ADDRESS_ALL,duty_cycle,percent_delay);
 }
@@ -122,8 +122,8 @@ uint16_t PCA9685::getPhaseShiftMax()
 }
 
 void PCA9685::setChannelPulseWidth(uint8_t channel,
-    uint16_t pulse_width,
-    uint16_t phase_shift)
+  uint16_t pulse_width,
+  uint16_t phase_shift)
 {
   uint16_t on_time;
   uint16_t off_time;
@@ -132,9 +132,23 @@ void PCA9685::setChannelPulseWidth(uint8_t channel,
 }
 
 void PCA9685::setAllChannelsPulseWidth(uint16_t pulse_width,
-    uint16_t phase_shift)
+  uint16_t phase_shift)
 {
   setAllDeviceChannelsPulseWidth(DEVICE_ADDRESS_ALL,pulse_width,phase_shift);
+}
+
+void PCA9685::setChannelServoPulseDuration(uint8_t channel,
+  uint16_t pulse_duration_microseconds)
+{
+  uint16_t pulse_width;
+  uint16_t phase_shift;
+  servoPulseDurationToPulseWidthAndPhaseShift(pulse_duration_microseconds,pulse_width,phase_shift);
+  setChannelPulseWidth(channel,pulse_width,phase_shift);
+}
+
+void PCA9685::setAllChannelsServoPulseDuration(uint16_t pulse_duration_microseconds)
+{
+  setAllDeviceChannelsServoPulseDuration(DEVICE_ADDRESS_ALL,pulse_duration_microseconds);
 }
 
 uint16_t PCA9685::getTimeMin()
@@ -162,7 +176,7 @@ void PCA9685::setChannelOnAndOffTime(uint8_t channel,
 }
 
 void PCA9685::setAllChannelsOnAndOffTime(uint16_t on_time,
-    uint16_t off_time)
+  uint16_t off_time)
 {
   setAllDeviceChannelsOnAndOffTime(DEVICE_ADDRESS_ALL,on_time,off_time);
 }
@@ -360,14 +374,14 @@ void PCA9685::setAllDevicesToFrequency(uint16_t frequency)
   }
 }
 
-void PCA9685::setSingleDeviceToHobbyServoFrequency(uint8_t device_address)
+void PCA9685::setSingleDeviceToServoFrequency(uint8_t device_address)
 {
-  setSingleDeviceToFrequency(device_address,HOBBY_SERVO_FREQUENCY);
+  setSingleDeviceToFrequency(device_address,SERVO_FREQUENCY);
 }
 
-void PCA9685::setAllDevicesToHobbyServoFrequency()
+void PCA9685::setAllDevicesToServoFrequency()
 {
-  setAllDevicesToFrequency(HOBBY_SERVO_FREQUENCY);
+  setAllDevicesToFrequency(SERVO_FREQUENCY);
 }
 
 uint8_t PCA9685::getDeviceChannelCount()
@@ -376,9 +390,9 @@ uint8_t PCA9685::getDeviceChannelCount()
 }
 
 void PCA9685::setDeviceChannelDutyCycle(uint8_t device_address,
-    uint8_t device_channel,
-    double duty_cycle,
-    double percent_delay)
+  uint8_t device_channel,
+  double duty_cycle,
+  double percent_delay)
 {
   uint16_t pulse_width;
   uint16_t phase_shift;
@@ -387,8 +401,8 @@ void PCA9685::setDeviceChannelDutyCycle(uint8_t device_address,
 }
 
 void PCA9685::setAllDeviceChannelsDutyCycle(uint8_t device_address,
-    double duty_cycle,
-    double percent_delay)
+  double duty_cycle,
+  double percent_delay)
 {
   uint16_t pulse_width;
   uint16_t phase_shift;
@@ -397,9 +411,9 @@ void PCA9685::setAllDeviceChannelsDutyCycle(uint8_t device_address,
 }
 
 void PCA9685::setDeviceChannelPulseWidth(uint8_t device_address,
-    uint8_t device_channel,
-    uint16_t pulse_width,
-    uint16_t phase_shift)
+  uint8_t device_channel,
+  uint16_t pulse_width,
+  uint16_t phase_shift)
 {
   uint16_t on_time;
   uint16_t off_time;
@@ -408,13 +422,32 @@ void PCA9685::setDeviceChannelPulseWidth(uint8_t device_address,
 }
 
 void PCA9685::setAllDeviceChannelsPulseWidth(uint8_t device_address,
-    uint16_t pulse_width,
-    uint16_t phase_shift)
+  uint16_t pulse_width,
+  uint16_t phase_shift)
 {
   uint16_t on_time;
   uint16_t off_time;
   pulseWidthAndPhaseShiftToOnTimeAndOffTime(pulse_width,phase_shift,on_time,off_time);
   setAllDeviceChannelsOnAndOffTime(device_address,on_time,off_time);
+}
+
+void PCA9685::setDeviceChannelServoPulseDuration(uint8_t device_address,
+  uint8_t device_channel,
+  uint16_t pulse_duration_microseconds)
+{
+  uint16_t pulse_width;
+  uint16_t phase_shift;
+  servoPulseDurationToPulseWidthAndPhaseShift(pulse_duration_microseconds,pulse_width,phase_shift);
+  setDeviceChannelPulseWidth(device_address,device_channel,pulse_width,phase_shift);
+}
+
+void PCA9685::setAllDeviceChannelsServoPulseDuration(uint8_t device_address,
+  uint16_t pulse_duration_microseconds)
+{
+  uint16_t pulse_width;
+  uint16_t phase_shift;
+  servoPulseDurationToPulseWidthAndPhaseShift(pulse_duration_microseconds,pulse_width,phase_shift);
+  setAllDeviceChannelsPulseWidth(device_address,pulse_width,phase_shift);
 }
 
 void PCA9685::setDeviceChannelOnAndOffTime(uint8_t device_address,
@@ -773,6 +806,14 @@ void PCA9685::pulseWidthAndPhaseShiftToOnTimeAndOffTime(uint16_t pulse_width,
   }
   on_time = constrain(phase_shift,getPhaseShiftMin(),getPhaseShiftMax());
   off_time = (on_time + pulse_width) % TIME_MAX;
+}
+
+void PCA9685::servoPulseDurationToPulseWidthAndPhaseShift(uint16_t pulse_duration_microseconds,
+  uint16_t & pulse_width,
+  uint16_t & phase_shift)
+{
+  phase_shift = 0;
+  pulse_width = (pulse_duration_microseconds * TIME_MAX) / SERVO_PERIOD_MICROSECONDS;
 }
 
 void PCA9685::setOnAndOffTimeByRegister(uint8_t device_address,

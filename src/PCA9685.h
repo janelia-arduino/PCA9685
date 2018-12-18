@@ -27,7 +27,7 @@ public:
   uint16_t getFrequencyMin();
   uint16_t getFrequencyMax();
   void setToFrequency(uint16_t frequency);
-  void setToHobbyServoFrequency();
+  void setToServoFrequency();
 
   uint8_t getChannelCount();
 
@@ -50,6 +50,10 @@ public:
     uint16_t phase_shift=0);
   void setAllChannelsPulseWidth(uint16_t pulse_width,
     uint16_t phase_shift=0);
+
+  void setChannelServoPulseDuration(uint8_t channel,
+    uint16_t pulse_duration_microseconds);
+  void setAllChannelsServoPulseDuration(uint16_t pulse_duration_microseconds);
 
   uint16_t getTimeMin();
   uint16_t getTimeMax();
@@ -96,8 +100,8 @@ public:
   void setSingleDeviceToFrequency(uint8_t device_address,
     uint16_t frequency);
   void setAllDevicesToFrequency(uint16_t frequency);
-  void setSingleDeviceToHobbyServoFrequency(uint8_t device_address);
-  void setAllDevicesToHobbyServoFrequency();
+  void setSingleDeviceToServoFrequency(uint8_t device_address);
+  void setAllDevicesToServoFrequency();
 
   uint8_t getDeviceChannelCount();
 
@@ -116,6 +120,12 @@ public:
   void setAllDeviceChannelsPulseWidth(uint8_t device_address,
     uint16_t pulse_width,
     uint16_t phase_shift=0);
+
+  void setDeviceChannelServoPulseDuration(uint8_t device_address,
+    uint8_t device_channel,
+    uint16_t pulse_duration_microseconds);
+  void setAllDeviceChannelsServoPulseDuration(uint8_t device_address,
+    uint16_t pulse_duration_microseconds);
 
   void setDeviceChannelOnAndOffTime(uint8_t device_address,
     uint8_t device_channel,
@@ -238,6 +248,10 @@ private:
     uint16_t & on_time,
     uint16_t & off_time);
 
+  void servoPulseDurationToPulseWidthAndPhaseShift(uint16_t pulse_duration_microseconds,
+    uint16_t & pulse_width,
+    uint16_t & phase_shift);
+
   void setOnAndOffTimeByRegister(uint8_t device_address,
     uint8_t register_address,
     uint16_t on_time,
@@ -305,7 +319,9 @@ private:
   const static uint8_t PERCENT_MIN = 0;
   const static uint8_t PERCENT_MAX = 100;
 
-  const static uint16_t HOBBY_SERVO_FREQUENCY = 50;
+  const static uint16_t SERVO_FREQUENCY = 50;
+  const static uint16_t SERVO_PERIOD_MICROSECONDS = 20000;
+
 };
 
 #endif
