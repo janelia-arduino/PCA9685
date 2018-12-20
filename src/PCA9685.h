@@ -17,7 +17,8 @@ public:
 
   // Convenience method when using a single device
   void setupSingleDevice(TwoWire & wire=Wire,
-    uint8_t device_address=0x40);
+    uint8_t device_address=0x40,
+    bool fast_mode_plus=true);
 
   // Methods for using a single device or multiple devices
   void setupOutputEnablePin(size_t output_enable_pin);
@@ -27,7 +28,9 @@ public:
   uint16_t getFrequencyMin();
   uint16_t getFrequencyMax();
   void setToFrequency(uint16_t frequency);
+  uint16_t getFrequency();
   void setToServoFrequency();
+  uint16_t getServoFrequency();
 
   uint8_t getChannelCount();
 
@@ -38,6 +41,9 @@ public:
   void setChannelDutyCycle(uint8_t channel,
     double duty_cycle,
     double percent_delay=0);
+  void getChannelDutyCycle(uint8_t channel,
+    double & duty_cycle,
+    double & percent_delay);
   void setAllChannelsDutyCycle(double duty_cycle,
     double percent_delay=0);
 
@@ -48,11 +54,16 @@ public:
   void setChannelPulseWidth(uint8_t channel,
     uint16_t pulse_width,
     uint16_t phase_shift=0);
+  void getChannelPulseWidth(uint8_t channel,
+    uint16_t & pulse_width,
+    uint16_t & phase_shift);
   void setAllChannelsPulseWidth(uint16_t pulse_width,
     uint16_t phase_shift=0);
 
   void setChannelServoPulseDuration(uint8_t channel,
     uint16_t pulse_duration_microseconds);
+  void getChannelServoPulseDuration(uint8_t channel,
+    uint16_t & pulse_duration_microseconds);
   void setAllChannelsServoPulseDuration(uint16_t pulse_duration_microseconds);
 
   uint16_t getTimeMin();
@@ -60,13 +71,20 @@ public:
   void setChannelOnAndOffTime(uint8_t channel,
     uint16_t on_time,
     uint16_t off_time);
+  void getChannelOnAndOffTime(uint8_t channel,
+    uint16_t & on_time,
+    uint16_t & off_time);
   void setAllChannelsOnAndOffTime(uint16_t on_time,
     uint16_t off_time);
   void setChannelOnTime(uint8_t channel,
     uint16_t on_time);
+  void getChannelOnTime(uint8_t channel,
+    uint16_t & on_time);
   void setAllChannelsOnTime(uint16_t on_time);
   void setChannelOffTime(uint8_t channel,
     uint16_t off_time);
+  void getChannelOffTime(uint8_t channel,
+    uint16_t & off_time);
   void setAllChannelsOffTime(uint16_t off_time);
 
   void setOutputsInverted();
@@ -78,7 +96,9 @@ public:
   void setOutputsHighImpedanceWhenDisabled();
 
   // Methods for using multiple devices
-  void setWire(TwoWire & wire=Wire);
+  // Take care when using fast_mode_plus with non-PCA9685 devices
+  void setWire(TwoWire & wire=Wire,
+    bool fast_mode_plus=true);
 
   // device_address=0x40 when all device address
   // hardware select lines are low
@@ -99,8 +119,10 @@ public:
 
   void setSingleDeviceToFrequency(uint8_t device_address,
     uint16_t frequency);
+  uint16_t getSingleDeviceFrequency(uint8_t device_address);
   void setAllDevicesToFrequency(uint16_t frequency);
   void setSingleDeviceToServoFrequency(uint8_t device_address);
+  uint16_t getSingleDeviceServoFrequency(uint8_t device_address);
   void setAllDevicesToServoFrequency();
 
   uint8_t getDeviceChannelCount();
@@ -168,6 +190,7 @@ private:
   uint8_t device_addresses_[DEVICE_COUNT_MAX];
 
   TwoWire * wire_ptr_;
+  const static long FAST_MODE_PLUS_CLOCK_FREQUENCY = 1000000;
 
   const static int NO_OUTPUT_ENABLE_PIN = -1;
   const static uint8_t CHANNELS_PER_DEVICE = 16;
@@ -182,17 +205,35 @@ private:
   const static uint8_t GENERAL_CALL_DEVICE_ADDRESS = 0x00;
   const static uint8_t SWRST = 0b110;
 
-  const static uint8_t READ_BYTE_COUNT = 1;
+  const static int READ_BYTE_COUNT = 1;
+  const static int STOP_WHEN_MULTIPLE_BYTE_REQUEST = false;
+  const static int READ_TWO_BYTES_COUNT = 2;
+  const static int READ_FOUR_BYTES_COUNT = 4;
 
   // Can write to one or more device at a time
   // so use address rather than index
   void write(uint8_t device_address,
     uint8_t register_address,
     uint8_t data);
+  void write(uint8_t device_address,
+    uint8_t register_address,
+    uint16_t data);
+  void write(uint8_t device_address,
+    uint8_t register_address,
+    uint16_t data0,
+    uint16_t data1);
   // Can only read from one device at a time
   // so use index rather than address
-  uint8_t read(uint8_t device_index,
-    uint8_t register_address);
+  void read(uint8_t device_index,
+    uint8_t register_address,
+    uint8_t & data);
+  void read(uint8_t device_index,
+    uint8_t register_address,
+    uint16_t & data);
+  void read(uint8_t device_index,
+    uint8_t register_address,
+    uint16_t & data0,
+    uint16_t & data1);
 
   const static uint8_t MODE1_REGISTER_ADDRESS = 0x00;
   union Mode1Register
@@ -231,9 +272,12 @@ private:
   void wake(uint8_t device_index);
   void wakeAll();
 
-  uint8_t frequencyToPrescale(uint16_t frequency);
   void setPrescale(uint8_t device_index,
     uint8_t prescale);
+  void getPrescale(uint8_t device_index,
+    uint8_t & prescale);
+  uint8_t frequencyToPrescale(uint16_t frequency);
+  uint16_t prescaleToFrequency(uint8_t prescale);
 
   uint8_t channelToDeviceIndex(uint8_t channel);
   uint8_t channelToDeviceChannel(uint8_t channel);
@@ -242,26 +286,26 @@ private:
     double percent_delay,
     uint16_t & pulse_width,
     uint16_t & phase_shift);
+  void pulseWidthAndPhaseShiftToDutyCycleAndPercentDelay(uint16_t pulse_width,
+    uint16_t phase_shift,
+    double & duty_cycle,
+    double & percent_delay);
 
   void pulseWidthAndPhaseShiftToOnTimeAndOffTime(uint16_t pulse_width,
     uint16_t phase_shift,
     uint16_t & on_time,
     uint16_t & off_time);
+  void onTimeAndOffTimeToPulseWidthAndPhaseShift(uint16_t on_time,
+    uint16_t off_time,
+    uint16_t & pulse_width,
+    uint16_t & phase_shift);
 
   void servoPulseDurationToPulseWidthAndPhaseShift(uint16_t pulse_duration_microseconds,
     uint16_t & pulse_width,
     uint16_t & phase_shift);
-
-  void setOnAndOffTimeByRegister(uint8_t device_address,
-    uint8_t register_address,
-    uint16_t on_time,
-    uint16_t off_time);
-  void setOnTimeByRegister(uint8_t device_address,
-    uint8_t register_address,
-    uint16_t on_time);
-  void setOffTimeByRegister(uint8_t device_address,
-    uint8_t register_address,
-    uint16_t off_time);
+  void pulseWidthAndPhaseShiftToServoPulseDuration(uint16_t pulse_width,
+    uint16_t phase_shift,
+    uint16_t & pulse_duration_microseconds);
 
   void setOutputsInverted(uint8_t device_index);
   void setOutputsNotInverted(uint8_t device_index);
