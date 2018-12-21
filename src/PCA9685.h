@@ -106,10 +106,6 @@ public:
   void addDevice(uint8_t device_address);
   void resetAllDevices();
 
-  const static uint8_t DEVICE_ADDRESS_ALL = 0x70;
-  const static uint8_t DEVICE_ADDRESS_GROUP0 = 0x71;
-  const static uint8_t DEVICE_ADDRESS_GROUP1 = 0x72;
-  const static uint8_t DEVICE_ADDRESS_GROUP2 = 0x73;
   void addDeviceToGroup0(uint8_t device_address);
   void removeDeviceFromGroup0(uint8_t device_address);
   void addDeviceToGroup1(uint8_t device_address);
@@ -126,6 +122,13 @@ public:
   void setAllDevicesToServoFrequency();
 
   uint8_t getDeviceChannelCount();
+
+  // Use these device address to set more than one device at a time
+  // with the methods below
+  const static uint8_t DEVICE_ADDRESS_ALL = 0x70;
+  const static uint8_t DEVICE_ADDRESS_GROUP0 = 0x71;
+  const static uint8_t DEVICE_ADDRESS_GROUP1 = 0x72;
+  const static uint8_t DEVICE_ADDRESS_GROUP2 = 0x73;
 
   void setDeviceChannelDutyCycle(uint8_t device_address,
     uint8_t device_channel,
@@ -205,35 +208,18 @@ private:
   const static uint8_t GENERAL_CALL_DEVICE_ADDRESS = 0x00;
   const static uint8_t SWRST = 0b110;
 
-  const static int READ_BYTE_COUNT = 1;
-  const static int STOP_WHEN_MULTIPLE_BYTE_REQUEST = false;
-  const static int READ_TWO_BYTES_COUNT = 2;
-  const static int READ_FOUR_BYTES_COUNT = 4;
-
   // Can write to one or more device at a time
   // so use address rather than index
+  template<typename T>
   void write(uint8_t device_address,
     uint8_t register_address,
-    uint8_t data);
-  void write(uint8_t device_address,
-    uint8_t register_address,
-    uint16_t data);
-  void write(uint8_t device_address,
-    uint8_t register_address,
-    uint16_t data0,
-    uint16_t data1);
+    T data);
   // Can only read from one device at a time
   // so use index rather than address
+  template<typename T>
   void read(uint8_t device_index,
     uint8_t register_address,
-    uint8_t & data);
-  void read(uint8_t device_index,
-    uint8_t register_address,
-    uint16_t & data);
-  void read(uint8_t device_index,
-    uint8_t register_address,
-    uint16_t & data0,
-    uint16_t & data1);
+    T & data);
 
   const static uint8_t MODE1_REGISTER_ADDRESS = 0x00;
   union Mode1Register
@@ -328,6 +314,9 @@ private:
   const static uint8_t ALL_LED_OFF_L_REGISTER_ADDRESS = 0xFC;
   const static uint8_t LED_REGISTERS_SIZE = 4;
   const static uint8_t BITS_PER_BYTE = 8;
+  const static uint8_t BITS_PER_TWO_BYTES = 16;
+  const static uint8_t BYTE_MAX = 0xFF;
+  const static uint16_t TWO_BYTE_MAX = 0xFFFF;
 
   const static uint8_t PRE_SCALE_REGISTER_ADDRESS = 0xFE;
   const static uint8_t PRE_SCALE_MIN = 0x03;
@@ -367,5 +356,7 @@ private:
   const static uint16_t SERVO_PERIOD_MICROSECONDS = 20000;
 
 };
+
+#include "PCA9685/PCA9685Definitions.h"
 
 #endif

@@ -161,8 +161,8 @@ void PCA9685::getChannelPulseWidth(uint8_t channel,
   uint16_t & pulse_width,
   uint16_t & phase_shift)
 {
-  uint16_t on_time;
-  uint16_t off_time;
+  uint16_t on_time = 0;
+  uint16_t off_time = 0;
   getChannelOnAndOffTime(channel,on_time,off_time);
   onTimeAndOffTimeToPulseWidthAndPhaseShift(on_time,off_time,pulse_width,phase_shift);
 }
@@ -217,7 +217,8 @@ void PCA9685::setChannelOnAndOffTime(uint8_t channel,
   uint8_t device_index = channelToDeviceIndex(channel);
   uint8_t device_channel = channelToDeviceChannel(channel);
   uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
-  write(device_addresses_[device_index],register_address,on_time,off_time);
+  uint32_t data = (off_time << BITS_PER_TWO_BYTES) | on_time;
+  write(device_addresses_[device_index],register_address,data);
 }
 
 void PCA9685::getChannelOnAndOffTime(uint8_t channel,
@@ -231,7 +232,10 @@ void PCA9685::getChannelOnAndOffTime(uint8_t channel,
   uint8_t device_index = channelToDeviceIndex(channel);
   uint8_t device_channel = channelToDeviceChannel(channel);
   uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
-  read(device_index,register_address,on_time,off_time);
+  uint32_t data;
+  read(device_index,register_address,data);
+  on_time = data & TWO_BYTE_MAX;
+  off_time = (data >> BITS_PER_TWO_BYTES) & TWO_BYTE_MAX;
 }
 
 void PCA9685::setAllChannelsOnAndOffTime(uint16_t on_time,
@@ -569,7 +573,8 @@ void PCA9685::setDeviceChannelOnAndOffTime(uint8_t device_address,
     return;
   }
   uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
-  write(device_address,register_address,on_time,off_time);
+  uint32_t data = (off_time << BITS_PER_TWO_BYTES) | on_time;
+  write(device_address,register_address,data);
 }
 
 void PCA9685::setAllDeviceChannelsOnAndOffTime(uint8_t device_address,
@@ -577,7 +582,8 @@ void PCA9685::setAllDeviceChannelsOnAndOffTime(uint8_t device_address,
   uint16_t off_time)
 {
   uint8_t register_address = ALL_LED_ON_L_REGISTER_ADDRESS;
-  write(device_address,register_address,on_time,off_time);
+  uint32_t data = (off_time << BITS_PER_TWO_BYTES) | on_time;
+  write(device_address,register_address,data);
 }
 
 void PCA9685::setDeviceChannelOnTime(uint8_t device_address,
@@ -779,85 +785,6 @@ int PCA9685::deviceAddressToDeviceIndex(uint8_t device_address)
   return device_index;
 }
 
-void PCA9685::write(uint8_t device_address,
-  uint8_t register_address,
-  uint8_t data)
-{
-  wire_ptr_->beginTransmission(device_address);
-  wire_ptr_->write(register_address);
-  wire_ptr_->write(data);
-  wire_ptr_->endTransmission();
-}
-
-void PCA9685::write(uint8_t device_address,
-  uint8_t register_address,
-  uint16_t data)
-{
-  wire_ptr_->beginTransmission(device_address);
-  wire_ptr_->write(register_address);
-  wire_ptr_->write(data);
-  wire_ptr_->write(data >> BITS_PER_BYTE);
-  wire_ptr_->endTransmission();
-}
-
-void PCA9685::write(uint8_t device_address,
-  uint8_t register_address,
-  uint16_t data0,
-  uint16_t data1)
-{
-  wire_ptr_->beginTransmission(device_address);
-  wire_ptr_->write(register_address);
-  wire_ptr_->write(data0);
-  wire_ptr_->write(data0 >> BITS_PER_BYTE);
-  wire_ptr_->write(data1);
-  wire_ptr_->write(data1 >> BITS_PER_BYTE);
-  wire_ptr_->endTransmission();
-}
-
-void PCA9685::read(uint8_t device_index,
-  uint8_t register_address,
-  uint8_t & data)
-{
-  int device_address = device_addresses_[device_index];
-  wire_ptr_->beginTransmission(device_address);
-  wire_ptr_->write(register_address);
-  wire_ptr_->endTransmission();
-
-  wire_ptr_->requestFrom(device_address,READ_BYTE_COUNT);
-  data = wire_ptr_->read();
-}
-
-void PCA9685::read(uint8_t device_index,
-  uint8_t register_address,
-  uint16_t & data)
-{
-  int device_address = device_addresses_[device_index];
-  wire_ptr_->beginTransmission(device_address);
-  wire_ptr_->write(register_address);
-  wire_ptr_->endTransmission();
-
-  wire_ptr_->requestFrom(device_address,READ_TWO_BYTES_COUNT,STOP_WHEN_MULTIPLE_BYTE_REQUEST);
-  data = wire_ptr_->read();
-  data += wire_ptr_->read() << BITS_PER_BYTE;
-}
-
-void PCA9685::read(uint8_t device_index,
-  uint8_t register_address,
-  uint16_t & data0,
-  uint16_t & data1)
-{
-  int device_address = device_addresses_[device_index];
-  wire_ptr_->beginTransmission(device_address);
-  wire_ptr_->write(register_address);
-  wire_ptr_->endTransmission();
-
-  wire_ptr_->requestFrom(device_address,READ_FOUR_BYTES_COUNT,STOP_WHEN_MULTIPLE_BYTE_REQUEST);
-  data0 = wire_ptr_->read();
-  data0 += wire_ptr_->read() << BITS_PER_BYTE;
-  data1 = wire_ptr_->read();
-  data1 += wire_ptr_->read() << BITS_PER_BYTE;
-}
-
 PCA9685::Mode1Register PCA9685::readMode1Register(uint8_t device_index)
 {
   Mode1Register mode1_register;
@@ -951,11 +878,6 @@ void PCA9685::dutyCycleAndPercentDelayToPulseWidthAndPhaseShift(double duty_cycl
 {
   pulse_width = round(((double)TIME_MAX * duty_cycle) / (double)PERCENT_MAX);
   phase_shift = round(((double)TIME_MAX * percent_delay) / (double)PERCENT_MAX);
-  // datasheet says to subtract 1
-  if (phase_shift >= 1)
-  {
-    phase_shift -= 1;
-  }
 }
 
 void PCA9685::pulseWidthAndPhaseShiftToDutyCycleAndPercentDelay(uint16_t pulse_width,
@@ -964,7 +886,7 @@ void PCA9685::pulseWidthAndPhaseShiftToDutyCycleAndPercentDelay(uint16_t pulse_w
   double & percent_delay)
 {
   duty_cycle = (double)(pulse_width * PERCENT_MAX) / (double)TIME_MAX;
-  percent_delay = (double)((phase_shift + 1) * PERCENT_MAX) / (double)TIME_MAX;
+  percent_delay = (double)(phase_shift * PERCENT_MAX) / (double)TIME_MAX;
 }
 
 void PCA9685::pulseWidthAndPhaseShiftToOnTimeAndOffTime(uint16_t pulse_width,
