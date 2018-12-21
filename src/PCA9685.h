@@ -18,7 +18,7 @@ public:
   // Convenience method when using a single device
   void setupSingleDevice(TwoWire & wire=Wire,
     uint8_t device_address=0x40,
-    bool fast_mode_plus=true);
+    bool fast_mode_plus=false);
 
   // Methods for using a single device or multiple devices
   void setupOutputEnablePin(size_t output_enable_pin);
@@ -98,7 +98,7 @@ public:
   // Methods for using multiple devices
   // Take care when using fast_mode_plus with non-PCA9685 devices
   void setWire(TwoWire & wire=Wire,
-    bool fast_mode_plus=true);
+    bool fast_mode_plus=false);
 
   // device_address=0x40 when all device address
   // hardware select lines are low
