@@ -355,12 +355,14 @@ void PCA9685::setWire(TwoWire & wire,
 
 void PCA9685::addDevice(uint8_t device_address)
 {
-  if ((device_address < DEVICE_ADDRESS_MIN) ||
-    (device_address > DEVICE_ADDRESS_MAX) ||
-    (device_address == DEVICE_ADDRESS_ALL) ||
-    (device_address == DEVICE_ADDRESS_GROUP0) ||
-    (device_address == DEVICE_ADDRESS_GROUP1) ||
-    (device_address == DEVICE_ADDRESS_GROUP2))
+  if ((device_count_ >= DEVICE_COUNT_MAX) ||
+    (device_address < DEVICE_ADDRESS_MIN) ||
+    (device_address > DEVICE_ADDRESS_MAX))
+  {
+    return;
+  }
+  int device_index = deviceAddressToDeviceIndex(device_address);
+  if (device_index != DEVICE_INDEX_NONE)
   {
     return;
   }
