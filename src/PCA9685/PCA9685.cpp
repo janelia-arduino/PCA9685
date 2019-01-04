@@ -756,7 +756,7 @@ void PCA9685::setAllDevicesOutputsHighImpedanceWhenDisabled()
 
 int PCA9685::deviceAddressToDeviceIndex(uint8_t device_address)
 {
-  uint8_t device_index = DEVICE_INDEX_NONE;
+  int device_index = DEVICE_INDEX_NONE;
   if (device_address == DEVICE_ADDRESS_ALL)
   {
     device_index = DEVICE_INDEX_ALL;
