@@ -198,11 +198,11 @@ private:
   const static int NO_OUTPUT_ENABLE_PIN = -1;
   const static uint8_t CHANNELS_PER_DEVICE = 16;
 
-  const static uint8_t DEVICE_INDEX_NONE = -1;
-  const static uint8_t DEVICE_INDEX_ALL = -2;
-  const static uint8_t DEVICE_INDEX_GROUP0 = -3;
-  const static uint8_t DEVICE_INDEX_GROUP1 = -4;
-  const static uint8_t DEVICE_INDEX_GROUP2 = -5;
+  const static int DEVICE_INDEX_NONE = -1;
+  const static int DEVICE_INDEX_ALL = -2;
+  const static int DEVICE_INDEX_GROUP0 = -3;
+  const static int DEVICE_INDEX_GROUP1 = -4;
+  const static int DEVICE_INDEX_GROUP2 = -5;
   int deviceAddressToDeviceIndex(uint8_t device_address);
 
   const static uint8_t GENERAL_CALL_DEVICE_ADDRESS = 0x00;
