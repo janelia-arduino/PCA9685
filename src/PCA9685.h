@@ -15,6 +15,9 @@ class PCA9685
 public:
   PCA9685();
 
+  const static uint8_t CHANNELS_PER_DEVICE = 16;
+  enum {DEVICE_COUNT_MAX=55};
+
   // Convenience method when using a single device
   void setupSingleDevice(TwoWire & wire=Wire,
     uint8_t device_address=0x40,
@@ -188,7 +191,6 @@ public:
 private:
   const static uint8_t DEVICE_ADDRESS_MIN = 0x40;
   const static uint8_t DEVICE_ADDRESS_MAX = 0x7B;
-  enum {DEVICE_COUNT_MAX=55};
   uint8_t device_count_;
   uint8_t device_addresses_[DEVICE_COUNT_MAX];
 
@@ -196,7 +198,6 @@ private:
   const static long FAST_MODE_PLUS_CLOCK_FREQUENCY = 1000000;
 
   const static int NO_OUTPUT_ENABLE_PIN = -1;
-  const static uint8_t CHANNELS_PER_DEVICE = 16;
 
   const static int DEVICE_INDEX_NONE = -1;
   const static int DEVICE_INDEX_ALL = -2;
