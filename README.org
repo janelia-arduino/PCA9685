@@ -1,6 +1,6 @@
 #+TITLE: PCA9685
 #+AUTHOR: Peter Polidoro
-#+EMAIL: peterpolidoro@gmail.com
+#+EMAIL: peter@polidoro.io
 
 * Library Information
   - Name :: PCA9685
@@ -8,7 +8,7 @@
   - License :: BSD
   - URL :: https://github.com/janelia-arduino/PCA9685
   - Author :: Peter Polidoro
-  - Email :: peterpolidoro@gmail.com
+  - Email :: peter@polidoro.io
 
   The PCA9685 is a 16-channel 12-bit PWM controller. All channels operate at a
   programmable frequency between roughly 25 to 1600 Hz with 16 independent
