@@ -17,9 +17,11 @@ void PCA9685::write(uint8_t device_address,
   int byte_count = sizeof(data);
   wire_ptr_->beginTransmission(device_address);
   wire_ptr_->write(register_address);
+  uint8_t write_byte;
   for (int byte_n=0; byte_n<byte_count; ++byte_n)
   {
-    wire_ptr_->write((data >> (BITS_PER_BYTE * byte_n)) & BYTE_MAX);
+    write_byte = (data >> (BITS_PER_BYTE * byte_n)) & BYTE_MAX;
+    wire_ptr_->write(write_byte);
   }
   wire_ptr_->endTransmission();
 }
