@@ -10,14 +10,14 @@
 PCA9685::PCA9685()
 {
   device_count_ = 0;
-  for (uint8_t device_index=0; device_index<DEVICE_COUNT_MAX; ++device_index)
+  for (DeviceIndex device_index=0; device_index<DEVICE_COUNT_MAX; ++device_index)
   {
     device_addresses_[device_index] = GENERAL_CALL_DEVICE_ADDRESS;
   }
 }
 
 void PCA9685::setupSingleDevice(TwoWire & wire,
-  uint8_t device_address,
+  DeviceAddress device_address,
   bool fast_mode_plus)
 {
   setWire(Wire,fast_mode_plus);
@@ -25,40 +25,40 @@ void PCA9685::setupSingleDevice(TwoWire & wire,
   resetAllDevices();
 }
 
-void PCA9685::setupOutputEnablePin(size_t output_enable_pin)
+void PCA9685::setupOutputEnablePin(Pin output_enable_pin)
 {
   pinMode(output_enable_pin,OUTPUT);
   digitalWrite(output_enable_pin,HIGH);
 }
 
-void PCA9685::enableOutputs(size_t output_enable_pin)
+void PCA9685::enableOutputs(Pin output_enable_pin)
 {
   digitalWrite(output_enable_pin,LOW);
 }
 
-void PCA9685::disableOutputs(size_t output_enable_pin)
+void PCA9685::disableOutputs(Pin output_enable_pin)
 {
   digitalWrite(output_enable_pin,HIGH);
 }
 
-uint16_t PCA9685::getFrequencyMin()
+PCA9685::Frequency PCA9685::getFrequencyMin()
 {
   return MICROSECONDS_PER_SECOND / PWM_PERIOD_MAX_US;
 }
 
-uint16_t PCA9685::getFrequencyMax()
+PCA9685::Frequency PCA9685::getFrequencyMax()
 {
   return MICROSECONDS_PER_SECOND / PWM_PERIOD_MIN_US;
 }
 
-void PCA9685::setToFrequency(uint16_t frequency)
+void PCA9685::setToFrequency(Frequency frequency)
 {
   setAllDevicesToFrequency(frequency);
 }
 
-uint16_t PCA9685::getFrequency()
+PCA9685::Frequency PCA9685::getFrequency()
 {
-  uint16_t frequency = 0;
+  Frequency frequency = 0;
   if (device_count_ > 0)
   {
     frequency = getSingleDeviceFrequency(device_addresses_[0]);
@@ -71,166 +71,166 @@ void PCA9685::setToServoFrequency()
   setAllDevicesToServoFrequency();
 }
 
-uint16_t PCA9685::getServoFrequency()
+PCA9685::Frequency PCA9685::getServoFrequency()
 {
   return SERVO_FREQUENCY;
 }
 
-uint8_t PCA9685::getChannelCount()
+PCA9685::ChannelCount PCA9685::getChannelCount()
 {
   return CHANNELS_PER_DEVICE * device_count_;
 }
 
-double PCA9685::getDutyCycleMin()
+PCA9685::Percent PCA9685::getDutyCycleMin()
 {
   return PERCENT_MIN;
 }
 
-double PCA9685::getDutyCycleMax()
+PCA9685::Percent PCA9685::getDutyCycleMax()
 {
   return PERCENT_MAX;
 }
 
-double PCA9685::getPercentDelayMin()
+PCA9685::Percent PCA9685::getPercentDelayMin()
 {
   return PERCENT_MIN;
 }
 
-double PCA9685::getPercentDelayMax()
+PCA9685::Percent PCA9685::getPercentDelayMax()
 {
   return PERCENT_MAX;
 }
 
-void PCA9685::setChannelDutyCycle(uint8_t channel,
-  double duty_cycle,
-  double percent_delay)
+void PCA9685::setChannelDutyCycle(Channel channel,
+  Percent duty_cycle,
+  Percent percent_delay)
 {
-  uint16_t pulse_width;
-  uint16_t phase_shift;
+  Duration pulse_width;
+  Duration phase_shift;
   dutyCycleAndPercentDelayToPulseWidthAndPhaseShift(duty_cycle,percent_delay,pulse_width,phase_shift);
   setChannelPulseWidth(channel,pulse_width,phase_shift);
 }
 
-void PCA9685::getChannelDutyCycle(uint8_t channel,
-  double & duty_cycle,
-  double & percent_delay)
+void PCA9685::getChannelDutyCycle(Channel channel,
+  Percent & duty_cycle,
+  Percent & percent_delay)
 {
-  uint16_t pulse_width;
-  uint16_t phase_shift;
+  Duration pulse_width;
+  Duration phase_shift;
   getChannelPulseWidth(channel,pulse_width,phase_shift);
   pulseWidthAndPhaseShiftToDutyCycleAndPercentDelay(pulse_width,phase_shift,duty_cycle,percent_delay);
 }
 
-void PCA9685::setAllChannelsDutyCycle(double duty_cycle,
-  double percent_delay)
+void PCA9685::setAllChannelsDutyCycle(Percent duty_cycle,
+  Percent percent_delay)
 {
   setAllDeviceChannelsDutyCycle(DEVICE_ADDRESS_ALL,duty_cycle,percent_delay);
 }
 
-uint16_t PCA9685::getPulseWidthMin()
+PCA9685::Duration PCA9685::getPulseWidthMin()
 {
   return TIME_MIN;
 }
 
-uint16_t PCA9685::getPulseWidthMax()
+PCA9685::Duration PCA9685::getPulseWidthMax()
 {
   return TIME_MAX;
 }
 
-uint16_t PCA9685::getPhaseShiftMin()
+PCA9685::Duration PCA9685::getPhaseShiftMin()
 {
   return TIME_MIN;
 }
 
-uint16_t PCA9685::getPhaseShiftMax()
+PCA9685::Duration PCA9685::getPhaseShiftMax()
 {
   return 0xFFFF;
 }
 
-void PCA9685::setChannelPulseWidth(uint8_t channel,
-  uint16_t pulse_width,
-  uint16_t phase_shift)
+void PCA9685::setChannelPulseWidth(Channel channel,
+  Duration pulse_width,
+  Duration phase_shift)
 {
-  uint16_t on_time;
-  uint16_t off_time;
+  Time on_time;
+  Time off_time;
   pulseWidthAndPhaseShiftToOnTimeAndOffTime(pulse_width,phase_shift,on_time,off_time);
   setChannelOnAndOffTime(channel,on_time,off_time);
 }
 
-void PCA9685::getChannelPulseWidth(uint8_t channel,
-  uint16_t & pulse_width,
-  uint16_t & phase_shift)
+void PCA9685::getChannelPulseWidth(Channel channel,
+  Duration & pulse_width,
+  Duration & phase_shift)
 {
-  uint16_t on_time = 0;
-  uint16_t off_time = 0;
+  Time on_time = 0;
+  Time off_time = 0;
   getChannelOnAndOffTime(channel,on_time,off_time);
   onTimeAndOffTimeToPulseWidthAndPhaseShift(on_time,off_time,pulse_width,phase_shift);
 }
 
-void PCA9685::setAllChannelsPulseWidth(uint16_t pulse_width,
-  uint16_t phase_shift)
+void PCA9685::setAllChannelsPulseWidth(Duration pulse_width,
+  Duration phase_shift)
 {
   setAllDeviceChannelsPulseWidth(DEVICE_ADDRESS_ALL,pulse_width,phase_shift);
 }
 
-void PCA9685::setChannelServoPulseDuration(uint8_t channel,
-  uint16_t pulse_duration_microseconds)
+void PCA9685::setChannelServoPulseDuration(Channel channel,
+  DurationMicroseconds pulse_duration_microseconds)
 {
-  uint16_t pulse_width;
-  uint16_t phase_shift;
+  Duration pulse_width;
+  Duration phase_shift;
   servoPulseDurationToPulseWidthAndPhaseShift(pulse_duration_microseconds,pulse_width,phase_shift);
   setChannelPulseWidth(channel,pulse_width,phase_shift);
 }
 
-void PCA9685::getChannelServoPulseDuration(uint8_t channel,
-  uint16_t & pulse_duration_microseconds)
+void PCA9685::getChannelServoPulseDuration(Channel channel,
+  DurationMicroseconds & pulse_duration_microseconds)
 {
-  uint16_t pulse_width;
-  uint16_t phase_shift;
+  Duration pulse_width;
+  Duration phase_shift;
   getChannelPulseWidth(channel,pulse_width,phase_shift);
   pulseWidthAndPhaseShiftToServoPulseDuration(pulse_width,phase_shift,pulse_duration_microseconds);
 }
 
-void PCA9685::setAllChannelsServoPulseDuration(uint16_t pulse_duration_microseconds)
+void PCA9685::setAllChannelsServoPulseDuration(DurationMicroseconds pulse_duration_microseconds)
 {
   setAllDeviceChannelsServoPulseDuration(DEVICE_ADDRESS_ALL,pulse_duration_microseconds);
 }
 
-uint16_t PCA9685::getTimeMin()
+PCA9685::Time PCA9685::getTimeMin()
 {
   return TIME_MIN;
 }
 
-uint16_t PCA9685::getTimeMax()
+PCA9685::Time PCA9685::getTimeMax()
 {
   return TIME_MAX;
 }
 
-void PCA9685::setChannelOnAndOffTime(uint8_t channel,
-  uint16_t on_time,
-  uint16_t off_time)
+void PCA9685::setChannelOnAndOffTime(Channel channel,
+  Time on_time,
+  Time off_time)
 {
   if (channel >= getChannelCount())
   {
     return;
   }
-  uint8_t device_index = channelToDeviceIndex(channel);
-  uint8_t device_channel = channelToDeviceChannel(channel);
+  DeviceIndex device_index = channelToDeviceIndex(channel);
+  Channel device_channel = channelToDeviceChannel(channel);
   uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
   uint32_t data = (off_time << BITS_PER_TWO_BYTES) | on_time;
   write(device_addresses_[device_index],register_address,data);
 }
 
-void PCA9685::getChannelOnAndOffTime(uint8_t channel,
-  uint16_t & on_time,
-  uint16_t & off_time)
+void PCA9685::getChannelOnAndOffTime(Channel channel,
+  Time & on_time,
+  Time & off_time)
 {
   if (channel >= getChannelCount())
   {
     return;
   }
-  uint8_t device_index = channelToDeviceIndex(channel);
-  uint8_t device_channel = channelToDeviceChannel(channel);
+  DeviceIndex device_index = channelToDeviceIndex(channel);
+  Channel device_channel = channelToDeviceChannel(channel);
   uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
   uint32_t data;
   read(device_index,register_address,data);
@@ -238,70 +238,70 @@ void PCA9685::getChannelOnAndOffTime(uint8_t channel,
   off_time = (data >> BITS_PER_TWO_BYTES) & TWO_BYTE_MAX;
 }
 
-void PCA9685::setAllChannelsOnAndOffTime(uint16_t on_time,
-  uint16_t off_time)
+void PCA9685::setAllChannelsOnAndOffTime(Time on_time,
+  Time off_time)
 {
   setAllDeviceChannelsOnAndOffTime(DEVICE_ADDRESS_ALL,on_time,off_time);
 }
 
-void PCA9685::setChannelOnTime(uint8_t channel,
-  uint16_t on_time)
+void PCA9685::setChannelOnTime(Channel channel,
+  Time on_time)
 {
   if (channel >= getChannelCount())
   {
     return;
   }
-  uint8_t device_index = channelToDeviceIndex(channel);
-  uint8_t device_channel = channelToDeviceChannel(channel);
+  DeviceIndex device_index = channelToDeviceIndex(channel);
+  Channel device_channel = channelToDeviceChannel(channel);
   uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
   write(device_addresses_[device_index],register_address,on_time);
 }
 
-void PCA9685::getChannelOnTime(uint8_t channel,
-  uint16_t & on_time)
+void PCA9685::getChannelOnTime(Channel channel,
+  Time & on_time)
 {
   if (channel >= getChannelCount())
   {
     return;
   }
-  uint8_t device_index = channelToDeviceIndex(channel);
-  uint8_t device_channel = channelToDeviceChannel(channel);
+  DeviceIndex device_index = channelToDeviceIndex(channel);
+  Channel device_channel = channelToDeviceChannel(channel);
   uint8_t register_address = LED0_ON_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
   read(device_index,register_address,on_time);
 }
 
-void PCA9685::setAllChannelsOnTime(uint16_t on_time)
+void PCA9685::setAllChannelsOnTime(Time on_time)
 {
   setAllDeviceChannelsOnTime(DEVICE_ADDRESS_ALL,on_time);
 }
 
-void PCA9685::setChannelOffTime(uint8_t channel,
-  uint16_t off_time)
+void PCA9685::setChannelOffTime(Channel channel,
+  Time off_time)
 {
   if (channel >= getChannelCount())
   {
     return;
   }
-  uint8_t device_index = channelToDeviceIndex(channel);
-  uint8_t device_channel = channelToDeviceChannel(channel);
+  DeviceIndex device_index = channelToDeviceIndex(channel);
+  Channel device_channel = channelToDeviceChannel(channel);
   uint8_t register_address = LED0_OFF_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
   write(device_addresses_[device_index],register_address,off_time);
 }
 
-void PCA9685::getChannelOffTime(uint8_t channel,
-  uint16_t & off_time)
+void PCA9685::getChannelOffTime(Channel channel,
+  Time & off_time)
 {
   if (channel >= getChannelCount())
   {
     return;
   }
-  uint8_t device_index = channelToDeviceIndex(channel);
-  uint8_t device_channel = channelToDeviceChannel(channel);
+  DeviceIndex device_index = channelToDeviceIndex(channel);
+  Channel device_channel = channelToDeviceChannel(channel);
   uint8_t register_address = LED0_OFF_L_REGISTER_ADDRESS + LED_REGISTERS_SIZE * device_channel;
   read(device_index,register_address,off_time);
 }
 
-void PCA9685::setAllChannelsOffTime(uint16_t off_time)
+void PCA9685::setAllChannelsOffTime(Time off_time)
 {
   setAllDeviceChannelsOffTime(DEVICE_ADDRESS_ALL,off_time);
 }
@@ -353,7 +353,7 @@ void PCA9685::setWire(TwoWire & wire,
 
 }
 
-void PCA9685::addDevice(uint8_t device_address)
+void PCA9685::addDevice(DeviceAddress device_address)
 {
   if ((device_count_ >= DEVICE_COUNT_MAX) ||
     (device_address < DEVICE_ADDRESS_MIN) ||
@@ -378,7 +378,7 @@ void PCA9685::resetAllDevices()
   wakeAll();
 }
 
-void PCA9685::addDeviceToGroup0(uint8_t device_address)
+void PCA9685::addDeviceToGroup0(DeviceAddress device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -390,7 +390,7 @@ void PCA9685::addDeviceToGroup0(uint8_t device_address)
   write(device_address,MODE1_REGISTER_ADDRESS,mode1_register.data);
 }
 
-void PCA9685::removeDeviceFromGroup0(uint8_t device_address)
+void PCA9685::removeDeviceFromGroup0(DeviceAddress device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -402,7 +402,7 @@ void PCA9685::removeDeviceFromGroup0(uint8_t device_address)
   write(device_address,MODE1_REGISTER_ADDRESS,mode1_register.data);
 }
 
-void PCA9685::addDeviceToGroup1(uint8_t device_address)
+void PCA9685::addDeviceToGroup1(DeviceAddress device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -414,7 +414,7 @@ void PCA9685::addDeviceToGroup1(uint8_t device_address)
   write(device_address,MODE1_REGISTER_ADDRESS,mode1_register.data);
 }
 
-void PCA9685::removeDeviceFromGroup1(uint8_t device_address)
+void PCA9685::removeDeviceFromGroup1(DeviceAddress device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -426,7 +426,7 @@ void PCA9685::removeDeviceFromGroup1(uint8_t device_address)
   write(device_address,MODE1_REGISTER_ADDRESS,mode1_register.data);
 }
 
-void PCA9685::addDeviceToGroup2(uint8_t device_address)
+void PCA9685::addDeviceToGroup2(DeviceAddress device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -438,7 +438,7 @@ void PCA9685::addDeviceToGroup2(uint8_t device_address)
   write(device_address,MODE1_REGISTER_ADDRESS,mode1_register.data);
 }
 
-void PCA9685::removeDeviceFromGroup2(uint8_t device_address)
+void PCA9685::removeDeviceFromGroup2(DeviceAddress device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -450,8 +450,8 @@ void PCA9685::removeDeviceFromGroup2(uint8_t device_address)
   write(device_address,MODE1_REGISTER_ADDRESS,mode1_register.data);
 }
 
-void PCA9685::setSingleDeviceToFrequency(uint8_t device_address,
-  uint16_t frequency)
+void PCA9685::setSingleDeviceToFrequency(DeviceAddress device_address,
+  Frequency frequency)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -462,9 +462,9 @@ void PCA9685::setSingleDeviceToFrequency(uint8_t device_address,
   setPrescale(device_index,prescale);
 }
 
-uint16_t PCA9685::getSingleDeviceFrequency(uint8_t device_address)
+PCA9685::Frequency PCA9685::getSingleDeviceFrequency(DeviceAddress device_address)
 {
-  uint16_t frequency = 0;
+  Frequency frequency = 0;
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index >= 0)
   {
@@ -475,21 +475,21 @@ uint16_t PCA9685::getSingleDeviceFrequency(uint8_t device_address)
   return frequency;
 }
 
-void PCA9685::setAllDevicesToFrequency(uint16_t frequency)
+void PCA9685::setAllDevicesToFrequency(Frequency frequency)
 {
   uint8_t prescale = frequencyToPrescale(frequency);
-  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  for (DeviceIndex device_index=0; device_index<device_count_; ++device_index)
   {
     setPrescale(device_index,prescale);
   }
 }
 
-void PCA9685::setSingleDeviceToServoFrequency(uint8_t device_address)
+void PCA9685::setSingleDeviceToServoFrequency(DeviceAddress device_address)
 {
   setSingleDeviceToFrequency(device_address,SERVO_FREQUENCY);
 }
 
-uint16_t PCA9685::getSingleDeviceServoFrequency(uint8_t device_address)
+PCA9685::Frequency PCA9685::getSingleDeviceServoFrequency(DeviceAddress device_address)
 {
   return SERVO_FREQUENCY;
 }
@@ -504,71 +504,71 @@ uint8_t PCA9685::getDeviceChannelCount()
   return CHANNELS_PER_DEVICE;
 }
 
-void PCA9685::setDeviceChannelDutyCycle(uint8_t device_address,
-  uint8_t device_channel,
-  double duty_cycle,
-  double percent_delay)
+void PCA9685::setDeviceChannelDutyCycle(DeviceAddress device_address,
+  Channel device_channel,
+  Percent duty_cycle,
+  Percent percent_delay)
 {
-  uint16_t pulse_width;
-  uint16_t phase_shift;
+  Duration pulse_width;
+  Duration phase_shift;
   dutyCycleAndPercentDelayToPulseWidthAndPhaseShift(duty_cycle,percent_delay,pulse_width,phase_shift);
   setDeviceChannelPulseWidth(device_address,device_channel,pulse_width,phase_shift);
 }
 
-void PCA9685::setAllDeviceChannelsDutyCycle(uint8_t device_address,
-  double duty_cycle,
-  double percent_delay)
+void PCA9685::setAllDeviceChannelsDutyCycle(DeviceAddress device_address,
+  Percent duty_cycle,
+  Percent percent_delay)
 {
-  uint16_t pulse_width;
-  uint16_t phase_shift;
+  Duration pulse_width;
+  Duration phase_shift;
   dutyCycleAndPercentDelayToPulseWidthAndPhaseShift(duty_cycle,percent_delay,pulse_width,phase_shift);
   setAllDeviceChannelsPulseWidth(device_address,pulse_width,phase_shift);
 }
 
-void PCA9685::setDeviceChannelPulseWidth(uint8_t device_address,
-  uint8_t device_channel,
-  uint16_t pulse_width,
-  uint16_t phase_shift)
+void PCA9685::setDeviceChannelPulseWidth(DeviceAddress device_address,
+  Channel device_channel,
+  Duration pulse_width,
+  Duration phase_shift)
 {
-  uint16_t on_time;
-  uint16_t off_time;
+  Time on_time;
+  Time off_time;
   pulseWidthAndPhaseShiftToOnTimeAndOffTime(pulse_width,phase_shift,on_time,off_time);
   setDeviceChannelOnAndOffTime(device_address,device_channel,on_time,off_time);
 }
 
-void PCA9685::setAllDeviceChannelsPulseWidth(uint8_t device_address,
-  uint16_t pulse_width,
-  uint16_t phase_shift)
+void PCA9685::setAllDeviceChannelsPulseWidth(DeviceAddress device_address,
+  Duration pulse_width,
+  Duration phase_shift)
 {
-  uint16_t on_time;
-  uint16_t off_time;
+  Time on_time;
+  Time off_time;
   pulseWidthAndPhaseShiftToOnTimeAndOffTime(pulse_width,phase_shift,on_time,off_time);
   setAllDeviceChannelsOnAndOffTime(device_address,on_time,off_time);
 }
 
-void PCA9685::setDeviceChannelServoPulseDuration(uint8_t device_address,
-  uint8_t device_channel,
-  uint16_t pulse_duration_microseconds)
+void PCA9685::setDeviceChannelServoPulseDuration(DeviceAddress device_address,
+  Channel device_channel,
+  DurationMicroseconds pulse_duration_microseconds)
 {
-  uint16_t pulse_width;
-  uint16_t phase_shift;
+  Duration pulse_width;
+  Duration phase_shift;
   servoPulseDurationToPulseWidthAndPhaseShift(pulse_duration_microseconds,pulse_width,phase_shift);
   setDeviceChannelPulseWidth(device_address,device_channel,pulse_width,phase_shift);
 }
 
-void PCA9685::setAllDeviceChannelsServoPulseDuration(uint8_t device_address,
-  uint16_t pulse_duration_microseconds)
+void PCA9685::setAllDeviceChannelsServoPulseDuration(DeviceAddress device_address,
+  DurationMicroseconds pulse_duration_microseconds)
 {
-  uint16_t pulse_width;
-  uint16_t phase_shift;
+  Duration pulse_width;
+  Duration phase_shift;
   servoPulseDurationToPulseWidthAndPhaseShift(pulse_duration_microseconds,pulse_width,phase_shift);
   setAllDeviceChannelsPulseWidth(device_address,pulse_width,phase_shift);
 }
 
-void PCA9685::setDeviceChannelOnAndOffTime(uint8_t device_address,
-  uint8_t device_channel,
-  uint16_t on_time,
-  uint16_t off_time)
+void PCA9685::setDeviceChannelOnAndOffTime(DeviceAddress device_address,
+  Channel device_channel,
+  Time on_time,
+  Time off_time)
 {
   if (device_channel >= getDeviceChannelCount())
   {
@@ -579,18 +579,18 @@ void PCA9685::setDeviceChannelOnAndOffTime(uint8_t device_address,
   write(device_address,register_address,data);
 }
 
-void PCA9685::setAllDeviceChannelsOnAndOffTime(uint8_t device_address,
-  uint16_t on_time,
-  uint16_t off_time)
+void PCA9685::setAllDeviceChannelsOnAndOffTime(DeviceAddress device_address,
+  Time on_time,
+  Time off_time)
 {
   uint8_t register_address = ALL_LED_ON_L_REGISTER_ADDRESS;
   uint32_t data = (off_time << BITS_PER_TWO_BYTES) | on_time;
   write(device_address,register_address,data);
 }
 
-void PCA9685::setDeviceChannelOnTime(uint8_t device_address,
-  uint8_t device_channel,
-  uint16_t on_time)
+void PCA9685::setDeviceChannelOnTime(DeviceAddress device_address,
+  Channel device_channel,
+  Time on_time)
 {
   if (device_channel >= getDeviceChannelCount())
   {
@@ -600,16 +600,16 @@ void PCA9685::setDeviceChannelOnTime(uint8_t device_address,
   write(device_address,register_address,on_time);
 }
 
-void PCA9685::setAllDeviceChannelsOnTime(uint8_t device_address,
-  uint16_t on_time)
+void PCA9685::setAllDeviceChannelsOnTime(DeviceAddress device_address,
+  Time on_time)
 {
   uint8_t register_address = ALL_LED_ON_L_REGISTER_ADDRESS;
   write(device_address,register_address,on_time);
 }
 
-void PCA9685::setDeviceChannelOffTime(uint8_t device_address,
-  uint8_t device_channel,
-  uint16_t off_time)
+void PCA9685::setDeviceChannelOffTime(DeviceAddress device_address,
+  Channel device_channel,
+  Time off_time)
 {
   if (device_channel >= getDeviceChannelCount())
   {
@@ -619,14 +619,14 @@ void PCA9685::setDeviceChannelOffTime(uint8_t device_address,
   write(device_address,register_address,off_time);
 }
 
-void PCA9685::setAllDeviceChannelsOffTime(uint8_t device_address,
-  uint16_t off_time)
+void PCA9685::setAllDeviceChannelsOffTime(DeviceAddress device_address,
+  Time off_time)
 {
   uint8_t register_address = ALL_LED_OFF_L_REGISTER_ADDRESS;
   write(device_address,register_address,off_time);
 }
 
-void PCA9685::setSingleDeviceOutputsInverted(uint8_t device_address)
+void PCA9685::setSingleDeviceOutputsInverted(DeviceAddress device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -638,13 +638,13 @@ void PCA9685::setSingleDeviceOutputsInverted(uint8_t device_address)
 
 void PCA9685::setAllDevicesOutputsInverted()
 {
-  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  for (DeviceIndex device_index=0; device_index<device_count_; ++device_index)
   {
     setOutputsInverted(device_index);
   }
 }
 
-void PCA9685::setSingleDeviceOutputsNotInverted(uint8_t device_address)
+void PCA9685::setSingleDeviceOutputsNotInverted(DeviceAddress device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -656,13 +656,13 @@ void PCA9685::setSingleDeviceOutputsNotInverted(uint8_t device_address)
 
 void PCA9685::setAllDevicesOutputsNotInverted()
 {
-  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  for (DeviceIndex device_index=0; device_index<device_count_; ++device_index)
   {
     setOutputsNotInverted(device_index);
   }
 }
 
-void PCA9685::setSingleDeviceOutputsToTotemPole(uint8_t device_address)
+void PCA9685::setSingleDeviceOutputsToTotemPole(DeviceAddress device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -674,13 +674,13 @@ void PCA9685::setSingleDeviceOutputsToTotemPole(uint8_t device_address)
 
 void PCA9685::setAllDevicesOutputsToTotemPole()
 {
-  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  for (DeviceIndex device_index=0; device_index<device_count_; ++device_index)
   {
     setOutputsToTotemPole(device_index);
   }
 }
 
-void PCA9685::setSingleDeviceOutputsToOpenDrain(uint8_t device_address)
+void PCA9685::setSingleDeviceOutputsToOpenDrain(DeviceAddress device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -692,13 +692,13 @@ void PCA9685::setSingleDeviceOutputsToOpenDrain(uint8_t device_address)
 
 void PCA9685::setAllDevicesOutputsToOpenDrain()
 {
-  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  for (DeviceIndex device_index=0; device_index<device_count_; ++device_index)
   {
     setOutputsToOpenDrain(device_index);
   }
 }
 
-void PCA9685::setSingleDeviceOutputsLowWhenDisabled(uint8_t device_address)
+void PCA9685::setSingleDeviceOutputsLowWhenDisabled(DeviceAddress device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -710,13 +710,13 @@ void PCA9685::setSingleDeviceOutputsLowWhenDisabled(uint8_t device_address)
 
 void PCA9685::setAllDevicesOutputsLowWhenDisabled()
 {
-  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  for (DeviceIndex device_index=0; device_index<device_count_; ++device_index)
   {
     setOutputsLowWhenDisabled(device_index);
   }
 }
 
-void PCA9685::setSingleDeviceOutputsHighWhenDisabled(uint8_t device_address)
+void PCA9685::setSingleDeviceOutputsHighWhenDisabled(DeviceAddress device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -728,13 +728,13 @@ void PCA9685::setSingleDeviceOutputsHighWhenDisabled(uint8_t device_address)
 
 void PCA9685::setAllDevicesOutputsHighWhenDisabled()
 {
-  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  for (DeviceIndex device_index=0; device_index<device_count_; ++device_index)
   {
     setOutputsHighWhenDisabled(device_index);
   }
 }
 
-void PCA9685::setSingleDeviceOutputsHighImpedanceWhenDisabled(uint8_t device_address)
+void PCA9685::setSingleDeviceOutputsHighImpedanceWhenDisabled(DeviceAddress device_address)
 {
   int device_index = deviceAddressToDeviceIndex(device_address);
   if (device_index < 0)
@@ -746,7 +746,7 @@ void PCA9685::setSingleDeviceOutputsHighImpedanceWhenDisabled(uint8_t device_add
 
 void PCA9685::setAllDevicesOutputsHighImpedanceWhenDisabled()
 {
-  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  for (DeviceIndex device_index=0; device_index<device_count_; ++device_index)
   {
     setOutputsHighImpedanceWhenDisabled(device_index);
   }
@@ -754,7 +754,7 @@ void PCA9685::setAllDevicesOutputsHighImpedanceWhenDisabled()
 
 // private
 
-int PCA9685::deviceAddressToDeviceIndex(uint8_t device_address)
+int PCA9685::deviceAddressToDeviceIndex(DeviceAddress device_address)
 {
   int device_index = DEVICE_INDEX_NONE;
   if (device_address == DEVICE_ADDRESS_ALL)
@@ -787,28 +787,28 @@ int PCA9685::deviceAddressToDeviceIndex(uint8_t device_address)
   return device_index;
 }
 
-PCA9685::Mode1Register PCA9685::readMode1Register(uint8_t device_index)
+PCA9685::Mode1Register PCA9685::readMode1Register(DeviceIndex device_index)
 {
   Mode1Register mode1_register;
   read(device_index,MODE1_REGISTER_ADDRESS,mode1_register.data);
   return mode1_register;
 }
 
-PCA9685::Mode2Register PCA9685::readMode2Register(uint8_t device_index)
+PCA9685::Mode2Register PCA9685::readMode2Register(DeviceIndex device_index)
 {
   Mode2Register mode2_register;
   read(device_index,MODE2_REGISTER_ADDRESS,mode2_register.data);
   return mode2_register;
 }
 
-void PCA9685::sleep(uint8_t device_index)
+void PCA9685::sleep(DeviceIndex device_index)
 {
   Mode1Register mode1_register = readMode1Register(device_index);
   mode1_register.fields.sleep = SLEEP;
   write(device_addresses_[device_index],MODE1_REGISTER_ADDRESS,mode1_register.data);
 }
 
-void PCA9685::wake(uint8_t device_index)
+void PCA9685::wake(DeviceIndex device_index)
 {
   Mode1Register mode1_register = readMode1Register(device_index);
   mode1_register.fields.sleep = WAKE;
@@ -824,13 +824,13 @@ void PCA9685::wake(uint8_t device_index)
 
 void PCA9685::wakeAll()
 {
-  for (uint8_t device_index=0; device_index<device_count_; ++device_index)
+  for (DeviceIndex device_index=0; device_index<device_count_; ++device_index)
   {
     wake(device_index);
   }
 }
 
-void PCA9685::setPrescale(uint8_t device_index,
+void PCA9685::setPrescale(DeviceIndex device_index,
   uint8_t prescale)
 {
   sleep(device_index);
@@ -838,24 +838,24 @@ void PCA9685::setPrescale(uint8_t device_index,
   wake(device_index);
 }
 
-void PCA9685::getPrescale(uint8_t device_index,
+void PCA9685::getPrescale(DeviceIndex device_index,
   uint8_t & prescale)
 {
   read(device_index,PRE_SCALE_REGISTER_ADDRESS,prescale);
 }
 
-uint8_t PCA9685::frequencyToPrescale(uint16_t frequency)
+uint8_t PCA9685::frequencyToPrescale(Frequency frequency)
 {
-  uint16_t period_us = MICROSECONDS_PER_SECOND / frequency;
+  DurationMicroseconds period_us = MICROSECONDS_PER_SECOND / frequency;
   period_us = constrain(period_us,PWM_PERIOD_MIN_US,PWM_PERIOD_MAX_US);
   uint8_t prescale = map(period_us,PWM_PERIOD_MIN_US,PWM_PERIOD_MAX_US,PRE_SCALE_MIN,PRE_SCALE_MAX);
   return prescale;
 }
 
-uint16_t PCA9685::prescaleToFrequency(uint8_t prescale)
+PCA9685::Frequency PCA9685::prescaleToFrequency(uint8_t prescale)
 {
-  uint16_t frequency = 0;
-  uint16_t period_us = map(prescale,PRE_SCALE_MIN,PRE_SCALE_MAX,PWM_PERIOD_MIN_US,PWM_PERIOD_MAX_US);
+  Frequency frequency = 0;
+  DurationMicroseconds period_us = map(prescale,PRE_SCALE_MIN,PRE_SCALE_MAX,PWM_PERIOD_MIN_US,PWM_PERIOD_MAX_US);
   if (period_us > 0)
   {
     frequency = round((double)MICROSECONDS_PER_SECOND / (double)period_us);
@@ -863,38 +863,38 @@ uint16_t PCA9685::prescaleToFrequency(uint8_t prescale)
   return frequency;
 }
 
-uint8_t PCA9685::channelToDeviceIndex(uint8_t channel)
+uint8_t PCA9685::channelToDeviceIndex(Channel channel)
 {
   return channel / CHANNELS_PER_DEVICE;
 }
 
-uint8_t PCA9685::channelToDeviceChannel(uint8_t channel)
+PCA9685::Channel PCA9685::channelToDeviceChannel(Channel channel)
 {
   return channel % CHANNELS_PER_DEVICE;
 }
 
-void PCA9685::dutyCycleAndPercentDelayToPulseWidthAndPhaseShift(double duty_cycle,
-  double percent_delay,
-  uint16_t & pulse_width,
-  uint16_t & phase_shift)
+void PCA9685::dutyCycleAndPercentDelayToPulseWidthAndPhaseShift(Percent duty_cycle,
+  Percent percent_delay,
+  Duration & pulse_width,
+  Duration & phase_shift)
 {
   pulse_width = round(((double)TIME_MAX * duty_cycle) / (double)PERCENT_MAX);
   phase_shift = round(((double)TIME_MAX * percent_delay) / (double)PERCENT_MAX);
 }
 
-void PCA9685::pulseWidthAndPhaseShiftToDutyCycleAndPercentDelay(uint16_t pulse_width,
-  uint16_t phase_shift,
-  double & duty_cycle,
-  double & percent_delay)
+void PCA9685::pulseWidthAndPhaseShiftToDutyCycleAndPercentDelay(Duration pulse_width,
+  Duration phase_shift,
+  Percent & duty_cycle,
+  Percent & percent_delay)
 {
   duty_cycle = (double)(pulse_width * PERCENT_MAX) / (double)TIME_MAX;
   percent_delay = (double)(phase_shift * PERCENT_MAX) / (double)TIME_MAX;
 }
 
-void PCA9685::pulseWidthAndPhaseShiftToOnTimeAndOffTime(uint16_t pulse_width,
-  uint16_t phase_shift,
-  uint16_t & on_time,
-  uint16_t & off_time)
+void PCA9685::pulseWidthAndPhaseShiftToOnTimeAndOffTime(Duration pulse_width,
+  Duration phase_shift,
+  Time & on_time,
+  Time & off_time)
 {
   if (pulse_width == TIME_MIN)
   {
@@ -912,10 +912,10 @@ void PCA9685::pulseWidthAndPhaseShiftToOnTimeAndOffTime(uint16_t pulse_width,
   off_time = (on_time + pulse_width) % TIME_MAX;
 }
 
-void PCA9685::onTimeAndOffTimeToPulseWidthAndPhaseShift(uint16_t on_time,
-  uint16_t off_time,
-  uint16_t & pulse_width,
-  uint16_t & phase_shift)
+void PCA9685::onTimeAndOffTimeToPulseWidthAndPhaseShift(Time on_time,
+  Time off_time,
+  Duration & pulse_width,
+  Duration & phase_shift)
 {
   if (on_time == TIME_MAX)
   {
@@ -939,65 +939,65 @@ void PCA9685::onTimeAndOffTimeToPulseWidthAndPhaseShift(uint16_t on_time,
   phase_shift = on_time;
 }
 
-void PCA9685::servoPulseDurationToPulseWidthAndPhaseShift(uint16_t pulse_duration_microseconds,
-  uint16_t & pulse_width,
-  uint16_t & phase_shift)
+void PCA9685::servoPulseDurationToPulseWidthAndPhaseShift(DurationMicroseconds pulse_duration_microseconds,
+  Duration & pulse_width,
+  Duration & phase_shift)
 {
   phase_shift = 0;
   pulse_width = (pulse_duration_microseconds * TIME_MAX) / SERVO_PERIOD_MICROSECONDS;
 }
 
-void PCA9685::pulseWidthAndPhaseShiftToServoPulseDuration(uint16_t pulse_width,
-  uint16_t phase_shift,
-  uint16_t & pulse_duration_microseconds)
+void PCA9685::pulseWidthAndPhaseShiftToServoPulseDuration(Duration pulse_width,
+  Duration phase_shift,
+  DurationMicroseconds & pulse_duration_microseconds)
 {
-  uint16_t period_us = SERVO_PERIOD_MICROSECONDS;
+  DurationMicroseconds period_us = SERVO_PERIOD_MICROSECONDS;
   pulse_duration_microseconds = (pulse_width * period_us) / TIME_MAX;
 }
 
-void PCA9685::setOutputsInverted(uint8_t device_index)
+void PCA9685::setOutputsInverted(DeviceIndex device_index)
 {
   Mode2Register mode2_register = readMode2Register(device_index);
   mode2_register.fields.invrt = OUTPUTS_INVERTED;
   write(device_addresses_[device_index],MODE2_REGISTER_ADDRESS,mode2_register.data);
 }
 
-void PCA9685::setOutputsNotInverted(uint8_t device_index)
+void PCA9685::setOutputsNotInverted(DeviceIndex device_index)
 {
   Mode2Register mode2_register = readMode2Register(device_index);
   mode2_register.fields.invrt = OUTPUTS_NOT_INVERTED;
   write(device_addresses_[device_index],MODE2_REGISTER_ADDRESS,mode2_register.data);
 }
 
-void PCA9685::setOutputsToTotemPole(uint8_t device_index)
+void PCA9685::setOutputsToTotemPole(DeviceIndex device_index)
 {
   Mode2Register mode2_register = readMode2Register(device_index);
   mode2_register.fields.outdrv = OUTPUTS_TOTEM_POLE;
   write(device_addresses_[device_index],MODE2_REGISTER_ADDRESS,mode2_register.data);
 }
 
-void PCA9685::setOutputsToOpenDrain(uint8_t device_index)
+void PCA9685::setOutputsToOpenDrain(DeviceIndex device_index)
 {
   Mode2Register mode2_register = readMode2Register(device_index);
   mode2_register.fields.outdrv = OUTPUTS_OPEN_DRAIN;
   write(device_addresses_[device_index],MODE2_REGISTER_ADDRESS,mode2_register.data);
 }
 
-void PCA9685::setOutputsLowWhenDisabled(uint8_t device_index)
+void PCA9685::setOutputsLowWhenDisabled(DeviceIndex device_index)
 {
   Mode2Register mode2_register = readMode2Register(device_index);
   mode2_register.fields.outne = OUTPUTS_LOW_WHEN_DISABLED;
   write(device_addresses_[device_index],MODE2_REGISTER_ADDRESS,mode2_register.data);
 }
 
-void PCA9685::setOutputsHighWhenDisabled(uint8_t device_index)
+void PCA9685::setOutputsHighWhenDisabled(DeviceIndex device_index)
 {
   Mode2Register mode2_register = readMode2Register(device_index);
   mode2_register.fields.outne = OUTPUTS_HIGH_WHEN_DISABLED;
   write(device_addresses_[device_index],MODE2_REGISTER_ADDRESS,mode2_register.data);
 }
 
-void PCA9685::setOutputsHighImpedanceWhenDisabled(uint8_t device_index)
+void PCA9685::setOutputsHighImpedanceWhenDisabled(DeviceIndex device_index)
 {
   Mode2Register mode2_register = readMode2Register(device_index);
   mode2_register.fields.outne = OUTPUTS_HIGH_IMPEDANCE_WHEN_DISABLED;

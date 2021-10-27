@@ -8,23 +8,24 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 #include <Arduino.h>
+#include <PCA9685.h>
 
 
 namespace constants
 {
-extern const uint8_t device_address;
-extern const size_t output_enable_pin;
+extern const PCA9685::DeviceAddress device_address;
+extern const PCA9685::Pin output_enable_pin;
 
 extern const size_t loop_delay;
-extern const uint16_t frequency;
-extern const uint8_t channel;
+extern const PCA9685::Frequency frequency;
+extern const PCA9685::Channel channel;
 
 enum{EXAMPLE_COUNT=4};
 
 struct Example
 {
-  double duty_cycle;
-  double percent_delay;
+  PCA9685::Percent duty_cycle;
+  PCA9685::Percent percent_delay;
 };
 
 extern const Example examples[EXAMPLE_COUNT];

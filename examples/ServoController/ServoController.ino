@@ -6,7 +6,7 @@
 
 PCA9685 pca9685;
 
-uint16_t servo_pulse_duration;
+PCA9685::DurationMicroseconds servo_pulse_duration;
 
 void setup()
 {

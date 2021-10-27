@@ -10,7 +10,7 @@
 
 
 template<typename T>
-void PCA9685::write(uint8_t device_address,
+void PCA9685::write(DeviceAddress device_address,
   uint8_t register_address,
   T data)
 {
@@ -27,7 +27,7 @@ void PCA9685::write(uint8_t device_address,
 }
 
 template<typename T>
-void PCA9685::read(uint8_t device_index,
+void PCA9685::read(DeviceIndex device_index,
   uint8_t register_address,
   T & data)
 {

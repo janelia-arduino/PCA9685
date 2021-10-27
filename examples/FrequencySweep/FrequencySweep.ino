@@ -6,9 +6,9 @@
 
 PCA9685 pca9685;
 
-uint16_t frequency_min;
-uint16_t frequency_max;
-uint16_t frequency;
+PCA9685::Frequency frequency_min;
+PCA9685::Frequency frequency_max;
+PCA9685::Frequency frequency;
 
 void setup()
 {
@@ -19,8 +19,8 @@ void setup()
 
   pca9685.setOutputsNotInverted();
 
-  uint16_t time_min = pca9685.getTimeMin();
-  uint16_t time_max = pca9685.getTimeMax();
+  PCA9685::Time time_min = pca9685.getTimeMin();
+  PCA9685::Time time_max = pca9685.getTimeMax();
   pca9685.setAllChannelsOnAndOffTime(time_min,time_max/4);
 
   frequency_min = pca9685.getFrequencyMin();

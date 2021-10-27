@@ -7,25 +7,25 @@
 
 PCA9685 pca9685;
 
-uint16_t time_min;
-uint16_t time_max;
+PCA9685::Time time_min;
+PCA9685::Time time_max;
 
-uint8_t channel;
+PCA9685::Channel channel;
 
-uint16_t on_time_set;
-uint16_t off_time_set;
-uint16_t on_time_get;
-uint16_t off_time_get;
+PCA9685::Time on_time_set;
+PCA9685::Time off_time_set;
+PCA9685::Time on_time_get;
+PCA9685::Time off_time_get;
 
-uint16_t pulse_width_set;
-uint16_t phase_shift_set;
-uint16_t pulse_width_get;
-uint16_t phase_shift_get;
+PCA9685::Duration pulse_width_set;
+PCA9685::Duration phase_shift_set;
+PCA9685::Duration pulse_width_get;
+PCA9685::Duration phase_shift_get;
 
-double duty_cycle_set;
-double percent_delay_set;
-double duty_cycle_get;
-double percent_delay_get;
+PCA9685::Percent duty_cycle_set;
+PCA9685::Percent percent_delay_set;
+PCA9685::Percent duty_cycle_get;
+PCA9685::Percent percent_delay_get;
 
 void setup()
 {
@@ -67,7 +67,7 @@ void loop()
     on_time_set = time_min;
     off_time_set = time_max;
   }
-  for (uint8_t channel=0; channel < pca9685.getChannelCount(); ++channel)
+  for (PCA9685::Channel channel=0; channel < pca9685.getChannelCount(); ++channel)
   {
     Serial << "frequency: " << pca9685.getFrequency() << "\n";
     Serial << "channel: " << channel << ", on_time_set: " << on_time_set << ", off_time_set: " << off_time_set << "\n";

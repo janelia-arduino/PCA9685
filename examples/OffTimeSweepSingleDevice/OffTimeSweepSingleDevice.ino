@@ -6,9 +6,9 @@
 
 PCA9685 pca9685;
 
-uint16_t time_min;
-uint16_t time_max;
-uint16_t off_time;
+PCA9685::Time time_min;
+PCA9685::Time time_max;
+PCA9685::Time off_time;
 
 void setup()
 {

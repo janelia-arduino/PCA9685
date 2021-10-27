@@ -6,14 +6,14 @@
 
 PCA9685 pca9685;
 
-uint16_t time_min;
-uint16_t time_max;
-uint16_t on_time;
+PCA9685::Time time_min;
+PCA9685::Time time_max;
+PCA9685::Time on_time;
 
 void setup()
 {
   pca9685.setWire(Wire);
-  for (uint8_t device_index=0; device_index<constants::DEVICE_COUNT; ++device_index)
+  for (PCA9685::DeviceIndex=0; device_index<constants::DEVICE_COUNT; ++device_index)
   {
     pca9685.addDevice(constants::device_addresses[device_index]);
   }
