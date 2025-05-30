@@ -20,7 +20,7 @@ void PCA9685::setupSingleDevice(TwoWire & wire,
   DeviceAddress device_address,
   bool fast_mode_plus)
 {
-  setWire(Wire,fast_mode_plus);
+  setWire(wire,fast_mode_plus);
   addDevice(device_address);
   resetAllDevices();
 }
